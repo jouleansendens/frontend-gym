@@ -85,8 +85,8 @@ const handleAccountUpdate = async (e: React.FormEvent) => {
 
     setIsAccountLoading(true);
     try {
-      const response = await fetch('https://trainwithbraden.com/api/admin/update-profile', {
-        method: 'PUT', // ✅ Ubah dari POST ke PUT
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/update-profile`, {
+          method: 'PUT', // ✅ Ubah dari POST ke PUT
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'

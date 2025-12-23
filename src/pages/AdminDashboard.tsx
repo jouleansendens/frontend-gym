@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch('https://trainwithbraden.com/api/admin/dashboard-stats', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/dashboard-stats`, {
           headers: {
             'Accept': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}` // Mengirim token asli

@@ -16,11 +16,12 @@ const handleLogin = async (e: React.FormEvent) => {
   setIsLoading(true);
 
   try {
-    const response = await fetch('https://trainwithbraden.com/api/login', {
+    // Langsung login, TIDAK PERLU fetch csrf-cookie lagi
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
       },
       body: JSON.stringify({ email, password })
     });
@@ -28,15 +29,16 @@ const handleLogin = async (e: React.FormEvent) => {
     const data = await response.json();
 
     if (response.ok) {
-      // Simpan token asli dari Laravel ke AuthContext
-      login(data.access_token); 
+      // Simpan token
+      login(data.access_token);
       toast.success('Welcome back, Coach!');
-      navigate('/admin');
+      setTimeout(() => navigate('/admin'), 100);
     } else {
       toast.error(data.message || 'Invalid credentials');
     }
   } catch (error) {
-    toast.error('Cannot connect to server. Make sure Laravel is running.');
+    console.error('Login Error:', error);
+    toast.error('Connection failed');
   } finally {
     setIsLoading(false);
   }

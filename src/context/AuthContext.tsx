@@ -27,7 +27,7 @@ useEffect(() => {
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
         // ✅ TAMBAHKAN credentials: 'include'
-        const res = await fetch('https://trainwithbraden.com/api/check-auth', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/check-auth`, {
           signal: controller.signal,
           credentials: 'include', // Sangat penting untuk mengirim session/cookie
           headers: {

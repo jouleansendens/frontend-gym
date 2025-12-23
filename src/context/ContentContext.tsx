@@ -226,7 +226,7 @@ interface ContentContextType {
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
 // ✅ Ubah ke Laravel API endpoint
-const API_BASE_URL = 'https://trainwithbraden.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<Record<string, string>>(defaultContent);
