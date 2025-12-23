@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Switch } from '../../components/ui/switch';
 import { Label } from '../../components/ui/label';
-import { Plus, Pencil, Trash2, Sparkles, DollarSign } from 'lucide-react';
+import { Plus, Pencil, Trash2, Sparkles, Banknote } from 'lucide-react'; // Changed DollarSign to Banknote for a more general feel
 import { toast } from 'sonner';
 
 export default function ManagePricing() {
@@ -54,22 +54,31 @@ export default function ManagePricing() {
         ...formData,
         features: featuresArray
       });
-      toast.success("Paket harga diperbarui!");
+      toast.success("Pricing plan updated!");
     } else {
       addPricing({
         ...formData,
         features: featuresArray
       });
-      toast.success("Paket harga baru ditambahkan!");
+      toast.success("New pricing plan added!");
     }
     setIsDialogOpen(false);
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Hapus paket ini?")) {
+    if (confirm("Are you sure you want to delete this plan?")) {
       deletePricing(id);
-      toast.success("Paket dihapus.");
+      toast.success("Plan deleted.");
     }
+  };
+
+  // Helper to format currency display
+  const formatRupiah = (value: string) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(parseInt(value) || 0);
   };
 
   return (
@@ -78,10 +87,10 @@ export default function ManagePricing() {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-white">Manage Pricing</h2>
-            <p className="text-white/60">Atur paket harga dan fitur yang ditawarkan.</p>
+            <p className="text-white/60">Manage pricing packages and the features offered.</p>
           </div>
           <Button onClick={handleOpenAdd} className="bg-orange-500 hover:bg-orange-600 text-white">
-            <Plus className="mr-2 h-4 w-4" /> Tambah Paket
+            <Plus className="mr-2 h-4 w-4" /> Add Plan
           </Button>
         </div>
 
@@ -90,18 +99,20 @@ export default function ManagePricing() {
             <Table>
               <TableHeader>
                 <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/60">Nama Paket</TableHead>
-                  <TableHead className="text-white/60">Harga</TableHead>
-                  <TableHead className="text-white/60 hidden md:table-cell">Deskripsi</TableHead>
+                  <TableHead className="text-white/60">Plan Name</TableHead>
+                  <TableHead className="text-white/60">Price</TableHead>
+                  <TableHead className="text-white/60 hidden md:table-cell">Description</TableHead>
                   <TableHead className="text-white/60 text-center">Popular</TableHead>
-                  <TableHead className="text-white/60 text-right">Aksi</TableHead>
+                  <TableHead className="text-white/60 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {pricing.map((item) => (
                   <TableRow key={item.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell className="text-orange-500 font-bold">${item.price}</TableCell>
+                    <TableCell className="text-orange-500 font-bold">
+                        {formatRupiah(item.price)}
+                    </TableCell>
                     <TableCell className="text-white/60 hidden md:table-cell truncate max-w-xs">
                       {item.description}
                     </TableCell>
@@ -129,13 +140,13 @@ export default function ManagePricing() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>{editingItem ? 'Edit Paket' : 'Tambah Paket Baru'}</DialogTitle>
+              <DialogTitle>{editingItem ? 'Edit Plan' : 'Add New Plan'}</DialogTitle>
             </DialogHeader>
             
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <label className="text-sm font-medium text-white/70">Nama Paket</label>
+                  <label className="text-sm font-medium text-white/70">Plan Name</label>
                   <Input 
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -144,21 +155,22 @@ export default function ManagePricing() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <label className="text-sm font-medium text-white/70">Harga ($)</label>
+                  <label className="text-sm font-medium text-white/70">Price (Rp)</label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-white/40" />
+                    <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-white/40" />
                     <Input 
                       value={formData.price}
                       onChange={(e) => setFormData({...formData, price: e.target.value})}
                       className="bg-black/40 border-white/20 pl-9" 
-                      placeholder="99"
+                      placeholder="500000"
+                      type="number"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="grid gap-2">
-                <label className="text-sm font-medium text-white/70">Periode</label>
+                <label className="text-sm font-medium text-white/70">Period</label>
                 <Input 
                   value={formData.period}
                   onChange={(e) => setFormData({...formData, period: e.target.value})}
@@ -168,22 +180,22 @@ export default function ManagePricing() {
               </div>
 
               <div className="grid gap-2">
-                <label className="text-sm font-medium text-white/70">Deskripsi Singkat</label>
+                <label className="text-sm font-medium text-white/70">Short Description</label>
                 <Textarea 
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   className="bg-black/40 border-white/20" 
-                  placeholder="Deskripsi singkat paket ini..."
+                  placeholder="A short description of this plan..."
                 />
               </div>
 
               <div className="grid gap-2">
-                <label className="text-sm font-medium text-white/70">Fitur (Satu per baris)</label>
+                <label className="text-sm font-medium text-white/70">Features (One per line)</label>
                 <Textarea 
                   value={formData.featuresText}
                   onChange={(e) => setFormData({...formData, featuresText: e.target.value})}
                   className="bg-black/40 border-white/20 min-h-[100px]" 
-                  placeholder="Akses Gym 24 Jam&#10;Free Handuk&#10;Loker Pribadi"
+                  placeholder="24/7 Gym Access&#10;Free Towels&#10;Private Locker"
                 />
               </div>
 
@@ -193,14 +205,14 @@ export default function ManagePricing() {
                   checked={formData.popular}
                   onCheckedChange={(checked) => setFormData({...formData, popular: checked})}
                 />
-                <Label htmlFor="popular-mode" className="text-white cursor-pointer">Jadikan Paket "Most Popular"</Label>
+                <Label htmlFor="popular-mode" className="text-white cursor-pointer">Set as "Most Popular" plan</Label>
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="text-white hover:bg-white/10">Batal</Button>
+              <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="text-white hover:bg-white/10">Cancel</Button>
               <Button onClick={handleSubmit} className="bg-orange-500 hover:bg-orange-600 text-white">
-                {editingItem ? 'Simpan' : 'Tambah'}
+                {editingItem ? 'Save Changes' : 'Add Plan'}
               </Button>
             </DialogFooter>
           </DialogContent>

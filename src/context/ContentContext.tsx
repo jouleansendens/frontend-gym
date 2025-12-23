@@ -242,21 +242,33 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   // ✅ Helper untuk API calls
   const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => {
-    try {
-      const options: RequestInit = {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-      };
-      if (data) options.body = JSON.stringify(data);
-      
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      console.error(`❌ API Error [${method} ${endpoint}]:`, error);
-      throw error;
+  try {
+    const token = localStorage.getItem('token'); // ✅ Ambil token
+
+    const options: RequestInit = {
+      method,
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json', // Tambahkan ini
+        ...(token && { 'Authorization': `Bearer ${token}` }) // ✅ Kirim token jika ada
+      },
+    };
+    
+    if (data) options.body = JSON.stringify(data);
+    
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
-  };
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`❌ API Error [${method} ${endpoint}]:`, error);
+    throw error;
+  }
+};
 
   // ✅ Load data dari MySQL saat inisialisasi
   useEffect(() => {

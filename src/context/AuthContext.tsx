@@ -61,10 +61,11 @@ useEffect(() => {
   checkAuth();
 }, []);
 
-  const login = () => {
-    setAuthenticated(true);
-    localStorage.setItem('isLoggedIn', 'true');
-  };
+  const login = (token: string) => { // Tambahkan parameter token
+  setAuthenticated(true);
+  localStorage.setItem('isLoggedIn', 'true');
+  localStorage.setItem('token', token); // ✅ Simpan token ke localStorage
+};
 
   const logout = () => {
     setAuthenticated(false);
