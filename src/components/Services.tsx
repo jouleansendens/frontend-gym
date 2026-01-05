@@ -6,6 +6,20 @@ export const iconMap: Record<string, any> = {
   User, Users, Video, Dumbbell, Calendar, TrendingUp, Activity, Heart, Zap, Star
 };
 
+// Helper to safely parse features from database (might be string or array)
+const parseFeatures = (features: any): string[] => {
+  if (Array.isArray(features)) return features;
+  if (typeof features === 'string') {
+    try {
+      const parsed = JSON.parse(features);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return features.split(',').map((f: string) => f.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
 export function Services() {
   const { services } = useContent();
 
@@ -29,7 +43,7 @@ export function Services() {
             services.map((service) => {
               // Ambil icon dari map, fallback ke Dumbbell jika tidak ditemukan
               const Icon = iconMap[service.iconName] || Dumbbell;
-              
+
               return (
                 <div
                   key={service.id}
@@ -38,12 +52,12 @@ export function Services() {
                   <div className="bg-orange-500/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
                     <Icon className="w-7 h-7 text-orange-500" />
                   </div>
-                  
+
                   <h3 className="text-white mb-3 text-xl font-bold">{service.title}</h3>
                   <p className="text-white/60 mb-6 leading-relaxed">{service.description}</p>
-                  
+
                   <ul className="space-y-2">
-                    {service.features.map((feature, idx) => (
+                    {parseFeatures(service.features).map((feature, idx) => (
                       <li key={idx} className="text-white/50 text-sm flex items-center gap-2">
                         <div className="w-1.5 h-1.5 bg-orange-500 rounded-full flex-shrink-0" />
                         {feature}

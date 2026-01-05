@@ -16,10 +16,24 @@ export function Pricing() {
     return new Intl.NumberFormat('id-ID').format(price);
   };
 
+  // --- HELPER TO SAFELY PARSE FEATURES (from database may be string or array) ---
+  const parseFeatures = (features: any): string[] => {
+    if (Array.isArray(features)) return features;
+    if (typeof features === 'string') {
+      try {
+        const parsed = JSON.parse(features);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return features.split(',').map((f: string) => f.trim()).filter(Boolean);
+      }
+    }
+    return [];
+  };
+
   // --- WHATSAPP LOGIC WITH ADMIN CONFIGURATION ---
   const handlePlanClick = (plan: any) => {
     const phoneNumber = content["contact.phone"] || "6281234567890";
-    
+
     // Default Message Template
     let messageTemplate = content["contact.wa_template"] || "Hello Coach, I'm interested in the *{name}* package for {price}/{period}. Could you provide more details?";
 
@@ -34,12 +48,12 @@ export function Pricing() {
 
   return (
     <section id="pricing" className="py-24 bg-black relative">
-      
+
       {/* Background Ambient Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10">
-        
+
         {/* Header Section */}
         <div className="text-center mb-8 space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-bold uppercase tracking-widest">
@@ -70,17 +84,16 @@ export function Pricing() {
             >
               <CarouselContent className="-ml-6 pt-20 pb-10">
                 {pricing.map((plan) => (
-                  <CarouselItem 
-                    key={plan.id} 
+                  <CarouselItem
+                    key={plan.id}
                     className="pl-6 basis-full md:basis-1/2 lg:basis-1/3"
                   >
                     <div className="h-full pt-2">
                       <div
-                        className={`h-full flex flex-col rounded-[2rem] p-8 relative transition-all duration-300 ${
-                          plan.popular
-                            ? 'bg-zinc-900 border border-orange-500/50 shadow-[0_0_50px_-10px_rgba(249,115,22,0.4)] scale-100'
-                            : 'bg-zinc-900/40 border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 backdrop-blur-sm'
-                        }`}
+                        className={`h-full flex flex-col rounded-[2rem] p-8 relative transition-all duration-300 ${plan.popular
+                          ? 'bg-zinc-900 border border-orange-500/50 shadow-[0_0_50px_-10px_rgba(249,115,22,0.4)] scale-100'
+                          : 'bg-zinc-900/40 border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 backdrop-blur-sm'
+                          }`}
                       >
                         {/* Most Popular Badge */}
                         {plan.popular && (
@@ -118,11 +131,10 @@ export function Pricing() {
 
                         {/* Feature List */}
                         <ul className="space-y-4 mb-8 flex-grow">
-                          {plan.features.map((feature, idx) => (
+                          {parseFeatures(plan.features).map((feature, idx) => (
                             <li key={idx} className="flex items-start gap-3 text-left">
-                              <div className={`mt-0.5 p-1 rounded-full flex-shrink-0 ${
-                                plan.popular ? 'bg-orange-500 text-black' : 'bg-white/10 text-white/70'
-                              }`}>
+                              <div className={`mt-0.5 p-1 rounded-full flex-shrink-0 ${plan.popular ? 'bg-orange-500 text-black' : 'bg-white/10 text-white/70'
+                                }`}>
                                 <Check className="w-3 h-3 stroke-[3px]" />
                               </div>
                               <span className="text-white/80 text-sm leading-snug font-medium">
@@ -135,11 +147,10 @@ export function Pricing() {
                         {/* Action Button */}
                         <button
                           onClick={() => handlePlanClick(plan)}
-                          className={`w-full py-4 rounded-2xl font-bold text-sm tracking-wide transition-all duration-300 ${
-                            plan.popular
-                              ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-[0_5px_30px_-5px_rgba(249,115,22,0.4)] hover:shadow-orange-500/60 hover:-translate-y-1'
-                              : 'bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-white/20 hover:-translate-y-1'
-                          }`}
+                          className={`w-full py-4 rounded-2xl font-bold text-sm tracking-wide transition-all duration-300 ${plan.popular
+                            ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-[0_5px_30px_-5px_rgba(249,115,22,0.4)] hover:shadow-orange-500/60 hover:-translate-y-1'
+                            : 'bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-white/20 hover:-translate-y-1'
+                            }`}
                         >
                           Choose Plan
                         </button>
@@ -148,7 +159,7 @@ export function Pricing() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              
+
               {/* Navigation Buttons */}
               <div className="hidden md:block">
                 <CarouselPrevious className="-left-16 h-14 w-14 bg-zinc-900/50 border border-white/10 text-white/50 hover:text-white hover:bg-orange-500 hover:border-orange-500 transition-all backdrop-blur-md z-30" />
