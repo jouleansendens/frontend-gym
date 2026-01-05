@@ -29,11 +29,16 @@ import {
   Zap,
   Award,
   FileCheck,
-  Trash2
+  Trash2,
+  LayoutTemplate,
+  ArrowUp,
+  ArrowDown,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function Settings() {
-  const { content, updateContent, certificates, addCertificate, updateCertificate, deleteCertificate } = useContent();
+  const { content, updateContent, certificates, addCertificate, updateCertificate, deleteCertificate, sections, updateSections } = useContent();
   const [isAccountLoading, setIsAccountLoading] = useState(false);
 
   // Website Settings State
@@ -212,6 +217,22 @@ export default function Settings() {
     }
   };
 
+  // --- LAYOUT MANAGEMENT ---
+  const handleMoveSection = (index: number, direction: 'up' | 'down') => {
+    const newSections = [...sections];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex >= 0 && targetIndex < newSections.length) {
+      [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]];
+      updateSections(newSections);
+    }
+  };
+
+  const handleToggleSection = (index: number) => {
+    const newSections = [...sections];
+    newSections[index].isVisible = !newSections[index].isVisible;
+    updateSections(newSections);
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-5xl mx-auto space-y-8 pb-10">
@@ -302,6 +323,70 @@ export default function Settings() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+
+
+          {/* --- CARD: LANDING PAGE LAYOUT --- */}
+          <Card className="bg-zinc-900 border-white/10 text-white">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <LayoutTemplate className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <CardTitle>Landing Page Layout</CardTitle>
+                  <CardDescription className="text-white/50">
+                    Reorder and toggle visibility of home page sections.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                {sections && sections.map((section, index) => (
+                  <div key={section.id} className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-md ${section.isVisible ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                        {section.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </div>
+                      <span className={`font-medium ${!section.isVisible && 'text-white/40 line-through'}`}>{section.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleMoveSection(index, 'up')}
+                        disabled={index === 0}
+                        className="h-8 w-8 hover:bg-white/10"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleMoveSection(index, 'down')}
+                        disabled={index === sections.length - 1}
+                        className="h-8 w-8 hover:bg-white/10"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </Button>
+                      <div className="w-px h-6 bg-white/10 mx-1" />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleSection(index)}
+                        className={`h-8 px-3 text-xs ${section.isVisible ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-green-400 hover:text-green-300 hover:bg-green-500/10'}`}
+                      >
+                        {section.isVisible ? 'Hide' : 'Show'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
 

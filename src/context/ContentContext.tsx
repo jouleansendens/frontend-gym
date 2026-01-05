@@ -17,6 +17,27 @@ export type TestimonialItem = {
   isActive: boolean | number; // ✅ Terima boolean atau number dari database
   is_active?: boolean | number; // ✅ Alias untuk backward compatibility
 };
+
+export type SectionConfig = {
+  id: string;
+  label: string;
+  component: string;
+  isVisible: boolean;
+};
+
+const defaultSections: SectionConfig[] = [
+  { id: 'hero', label: 'Hero Section', component: 'Hero', isVisible: true },
+  { id: 'about', label: 'About Me', component: 'About', isVisible: true },
+  { id: 'quote', label: 'Quote Banner', component: 'QuoteBanner', isVisible: true },
+  { id: 'services', label: 'Services', component: 'Services', isVisible: true },
+  { id: 'leaderboard', label: 'Steps Leaderboard', component: 'StepsLeaderboard', isVisible: true },
+  { id: 'coach_bio', label: 'Coach Bio', component: 'CoachBio', isVisible: true },
+  { id: 'testimonials', label: 'Testimonials', component: 'Testimonials', isVisible: true },
+  { id: 'pricing', label: 'Pricing Plans', component: 'Pricing', isVisible: true },
+  { id: 'faq', label: 'FAQ', component: 'FAQ', isVisible: true },
+  { id: 'contact', label: 'Contact', component: 'Contact', isVisible: true },
+];
+
 // --- DEFAULT CONTENT ---
 const defaultContent: Record<string, string> = {
   "hero.badge": "Certified Personal Trainer",
@@ -240,6 +261,8 @@ interface ContentContextType {
   addTestimonial: (data: any) => void;
   updateTestimonial: (id: string, data: any) => void;
   deleteTestimonial: (id: string) => void;
+  sections: SectionConfig[];
+  updateSections: (newSections: SectionConfig[]) => void;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -249,6 +272,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<Record<string, string>>(defaultContent);
+  const [sections, setSections] = useState<SectionConfig[]>(defaultSections);
   const [services, setServices] = useState<ServiceItem[]>(defaultServices);
   const [pricing, setPricing] = useState<PricingItem[]>(defaultPricing);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -317,7 +341,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         ]);
 
         // Set state dengan data dari database
-        if (contentData?.data) setContent({ ...defaultContent, ...contentData.data });
+        if (contentData?.data) {
+          setContent({ ...defaultContent, ...contentData.data });
+          // Load Layout Order if exists
+          if (contentData.data['site.layout_order']) {
+            try {
+              const parsed = JSON.parse(contentData.data['site.layout_order']);
+              if (Array.isArray(parsed)) setSections(parsed);
+            } catch (e) {
+              console.error('Failed to parse layout order', e);
+            }
+          }
+        }
         if (servicesData?.data) setServices(servicesData.data);
         if (pricingData?.data) setPricing(pricingData.data);
         if (faqsData?.data) setFaqs(faqsData.data);
@@ -343,6 +378,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to update content:', error);
     }
+  };
+
+  const updateSections = async (newSections: SectionConfig[]) => {
+    setSections(newSections);
+    await updateContent('site.layout_order', JSON.stringify(newSections));
   };
 
   // --- SERVICES MANAGEMENT ---
@@ -601,7 +641,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       isEditMode, setEditMode,
       resetContent,
       certificates, addCertificate, updateCertificate, deleteCertificate,
-      testimonials, addTestimonial, updateTestimonial, deleteTestimonial
+      testimonials, addTestimonial, updateTestimonial, deleteTestimonial,
+      sections, updateSections
     }}>
       {children}
     </ContentContext.Provider>

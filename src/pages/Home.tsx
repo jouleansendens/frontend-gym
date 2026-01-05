@@ -10,32 +10,44 @@ import { FAQ } from '../components/FAQ';
 import { Contact } from '../components/Contact';
 import { Footer } from '../components/Footer';
 import { QuoteBanner } from '../components/QuoteBanner';
-// 1. Import komponen SEO yang tadi dibuat
-import SEO from '../components/SEO'; 
+import SEO from '../components/SEO';
+import { useContent } from '../context/ContentContext';
 
 export default function Home() {
+  const { sections } = useContent();
+
+  const sectionComponents: Record<string, React.ReactNode> = {
+    'Hero': <Hero />,
+    'About': <About />,
+    'QuoteBanner': <QuoteBanner />,
+    'Services': <Services />,
+    'StepsLeaderboard': <StepsLeaderboard />,
+    'CoachBio': <CoachBio />,
+    'Testimonials': <Testimonials />,
+    'Pricing': <Pricing />,
+    'FAQ': <FAQ />,
+    'Contact': <Contact />,
+  };
+
   return (
     <main className="bg-zinc-950 min-h-screen">
-      {/* 2. Pasang SEO di sini dengan kata kunci melimpah */}
-      <SEO 
-        title="Coach Gym & Training 1 on 1 Privat | Train with Braden" 
-        description="Program fitness terukur dengan Coach Gym Online dan Training 1 on 1 privat. Fokus pada transformasi tubuh, muscle gain, dan weight loss bersama Coach Braden." 
+      <SEO
+        title="Coach Gym & Training 1 on 1 Privat | Train with Braden"
+        description="Program fitness terukur dengan Coach Gym Online dan Training 1 on 1 privat. Fokus pada transformasi tubuh, muscle gain, dan weight loss bersama Coach Braden."
       />
 
       <Navbar />
-      <Hero />
-      <About />
-      <QuoteBanner />
-      <Services />
-      <StepsLeaderboard />
-      <CoachBio />
-      
-      {/* Testimonials untuk social proof */}
-      <Testimonials /> 
-      
-      <Pricing />
-      <FAQ />
-      <Contact />
+
+      {/* Dynamic Sections Rendering */}
+      {sections.map(section => {
+        if (!section.isVisible) return null;
+        return (
+          <div key={section.id}>
+            {sectionComponents[section.component]}
+          </div>
+        );
+      })}
+
       <Footer />
     </main>
   );
