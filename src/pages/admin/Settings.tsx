@@ -18,7 +18,11 @@ import {
   Lock,
   ShieldCheck,
   Settings as SettingsIcon,
-  Video
+  Video,
+  Instagram,
+  Facebook,
+  Youtube,
+  Music2
 } from 'lucide-react';
 
 export default function Settings() {
@@ -34,7 +38,16 @@ export default function Settings() {
     address: '',
     instagram: '',
     facebook: '',
-    youtube: ''
+    youtube: '',
+    tiktok: ''
+  });
+
+  // Social Media Toggle State
+  const [socialEnabled, setSocialEnabled] = useState({
+    instagram: true,
+    facebook: true,
+    youtube: true,
+    tiktok: true
   });
 
   // Intro Video State
@@ -62,6 +75,13 @@ export default function Settings() {
       instagram: content["social.instagram"] || "",
       facebook: content["social.facebook"] || "",
       youtube: content["social.youtube"] || "",
+      tiktok: content["social.tiktok"] || ""
+    });
+    setSocialEnabled({
+      instagram: content["social.instagram.enabled"] !== "false",
+      facebook: content["social.facebook.enabled"] !== "false",
+      youtube: content["social.youtube.enabled"] !== "false",
+      tiktok: content["social.tiktok.enabled"] !== "false"
     });
     setVideoData({
       video_url: content["intro.video_url"] || "",
@@ -80,6 +100,11 @@ export default function Settings() {
     updateContent("social.instagram", formData.instagram);
     updateContent("social.facebook", formData.facebook);
     updateContent("social.youtube", formData.youtube);
+    updateContent("social.tiktok", formData.tiktok);
+    updateContent("social.instagram.enabled", String(socialEnabled.instagram));
+    updateContent("social.facebook.enabled", String(socialEnabled.facebook));
+    updateContent("social.youtube.enabled", String(socialEnabled.youtube));
+    updateContent("social.tiktok.enabled", String(socialEnabled.tiktok));
 
     toast.success("Website settings saved successfully!");
   };
@@ -386,40 +411,106 @@ export default function Settings() {
                 <div>
                   <CardTitle>Social Media Links</CardTitle>
                   <CardDescription className="text-white/50">
-                    Leave empty to hide the icon.
+                    Toggle to enable/disable social media icons on the website.
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Instagram URL</Label>
+              {/* Instagram */}
+              <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${socialEnabled.instagram ? 'bg-gradient-to-r from-pink-500/10 to-purple-500/10 border-pink-500/20' : 'bg-zinc-800/50 border-white/5 opacity-50'}`}>
+                <div className="p-2 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg">
+                  <Instagram className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Instagram</Label>
                   <Input
                     value={formData.instagram}
                     onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
                     placeholder="https://instagram.com/username"
-                    className="bg-black/40 border-white/20"
+                    className="bg-black/40 border-white/20 mt-1"
+                    disabled={!socialEnabled.instagram}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Facebook URL</Label>
+                <button
+                  type="button"
+                  onClick={() => setSocialEnabled({ ...socialEnabled, instagram: !socialEnabled.instagram })}
+                  className={`relative w-14 h-7 rounded-full transition-all ${socialEnabled.instagram ? 'bg-pink-500' : 'bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${socialEnabled.instagram ? 'left-8' : 'left-1'}`} />
+                </button>
+              </div>
+
+              {/* Facebook */}
+              <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${socialEnabled.facebook ? 'bg-blue-500/10 border-blue-500/20' : 'bg-zinc-800/50 border-white/5 opacity-50'}`}>
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <Facebook className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Facebook</Label>
                   <Input
                     value={formData.facebook}
                     onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
                     placeholder="https://facebook.com/username"
-                    className="bg-black/40 border-white/20"
+                    className="bg-black/40 border-white/20 mt-1"
+                    disabled={!socialEnabled.facebook}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>YouTube URL</Label>
+                <button
+                  type="button"
+                  onClick={() => setSocialEnabled({ ...socialEnabled, facebook: !socialEnabled.facebook })}
+                  className={`relative w-14 h-7 rounded-full transition-all ${socialEnabled.facebook ? 'bg-blue-500' : 'bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${socialEnabled.facebook ? 'left-8' : 'left-1'}`} />
+                </button>
+              </div>
+
+              {/* YouTube */}
+              <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${socialEnabled.youtube ? 'bg-red-500/10 border-red-500/20' : 'bg-zinc-800/50 border-white/5 opacity-50'}`}>
+                <div className="p-2 bg-red-600 rounded-lg">
+                  <Youtube className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">YouTube</Label>
                   <Input
                     value={formData.youtube}
                     onChange={(e) => setFormData({ ...formData, youtube: e.target.value })}
                     placeholder="https://youtube.com/c/channel"
-                    className="bg-black/40 border-white/20"
+                    className="bg-black/40 border-white/20 mt-1"
+                    disabled={!socialEnabled.youtube}
                   />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setSocialEnabled({ ...socialEnabled, youtube: !socialEnabled.youtube })}
+                  className={`relative w-14 h-7 rounded-full transition-all ${socialEnabled.youtube ? 'bg-red-500' : 'bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${socialEnabled.youtube ? 'left-8' : 'left-1'}`} />
+                </button>
+              </div>
+
+              {/* TikTok */}
+              <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${socialEnabled.tiktok ? 'bg-zinc-500/10 border-white/20' : 'bg-zinc-800/50 border-white/5 opacity-50'}`}>
+                <div className="p-2 bg-black rounded-lg border border-white/20">
+                  <Music2 className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">TikTok</Label>
+                  <Input
+                    value={formData.tiktok}
+                    onChange={(e) => setFormData({ ...formData, tiktok: e.target.value })}
+                    placeholder="https://tiktok.com/@username"
+                    className="bg-black/40 border-white/20 mt-1"
+                    disabled={!socialEnabled.tiktok}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSocialEnabled({ ...socialEnabled, tiktok: !socialEnabled.tiktok })}
+                  className={`relative w-14 h-7 rounded-full transition-all ${socialEnabled.tiktok ? 'bg-white' : 'bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 rounded-full transition-all ${socialEnabled.tiktok ? 'left-8 bg-black' : 'left-1 bg-white'}`} />
+                </button>
               </div>
             </CardContent>
           </Card>

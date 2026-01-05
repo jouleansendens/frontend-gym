@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import emailjs from '@emailjs/browser';
-import { 
+import {
   Mail, Phone, MapPin, Instagram, Facebook, Youtube, Linkedin, Twitter,
-  Send, CheckCircle2, Clock, MessageSquare
+  Send, CheckCircle2, Clock, MessageSquare, Music2
 } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
 import { toast } from 'sonner';
-import { Editable } from './editor/Editable'; 
+import { Editable } from './editor/Editable';
 
 export function Contact() {
   const { addMessage, content, updateContent, isEditMode } = useContent();
@@ -18,11 +18,12 @@ export function Contact() {
 
   // --- Konfigurasi Sosial Media Dinamis ---
   const socialPlatforms = [
-    { key: "social.instagram", icon: Instagram, label: "Instagram", color: "pink" },
-    { key: "social.facebook", icon: Facebook, label: "Facebook", color: "blue" },
-    { key: "social.youtube", icon: Youtube, label: "YouTube", color: "red" },
-    { key: "social.linkedin", icon: Linkedin, label: "LinkedIn", color: "blue" },
-    { key: "social.twitter", icon: Twitter, label: "Twitter/X", color: "blue" },
+    { key: "social.instagram", enableKey: "social.instagram.enabled", icon: Instagram, label: "Instagram", color: "pink" },
+    { key: "social.facebook", enableKey: "social.facebook.enabled", icon: Facebook, label: "Facebook", color: "blue" },
+    { key: "social.youtube", enableKey: "social.youtube.enabled", icon: Youtube, label: "YouTube", color: "red" },
+    { key: "social.tiktok", enableKey: "social.tiktok.enabled", icon: Music2, label: "TikTok", color: "white" },
+    { key: "social.linkedin", enableKey: "social.linkedin.enabled", icon: Linkedin, label: "LinkedIn", color: "blue" },
+    { key: "social.twitter", enableKey: "social.twitter.enabled", icon: Twitter, label: "Twitter/X", color: "blue" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,11 +79,11 @@ export function Contact() {
               <Editable id="contact.title.bottom" defaultText="Transformation" as="span" />
             </span>
           </h2>
-          <Editable 
-            id="contact.subtitle" 
-            as="p" 
-            className="text-zinc-400 text-sm md:text-lg leading-relaxed px-4" 
-            defaultText="Ready to take the first step? Reach out for a free consultation and let's discuss how we can achieve your fitness goals together." 
+          <Editable
+            id="contact.subtitle"
+            as="p"
+            className="text-zinc-400 text-sm md:text-lg leading-relaxed px-4"
+            defaultText="Ready to take the first step? Reach out for a free consultation and let's discuss how we can achieve your fitness goals together."
           />
         </div>
 
@@ -90,7 +91,7 @@ export function Contact() {
           {/* Sisi Kiri: Informasi Kontak */}
           <div className="lg:col-span-1 space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-              
+
               {/* Email Block */}
               <div className="group bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-5 md:p-6 hover:border-white/10 transition-all duration-300">
                 <div className="flex items-start gap-4">
@@ -161,28 +162,31 @@ export function Contact() {
               <div className="flex flex-wrap gap-3">
                 {socialPlatforms.map((platform, idx) => {
                   const url = content[platform.key];
-                  
-                  // Di halaman publik, ikon akan hilang jika link kosong
-                  if (!url && !isEditMode) return null;
+                  const isEnabled = content[platform.enableKey] !== "false"; // Default true if not set
+
+                  // Di halaman publik, ikon akan hilang jika toggle disabled atau link kosong
+                  if ((!url || !isEnabled) && !isEditMode) return null;
 
                   return (
                     <div key={idx} className="relative group/social">
-                      <a 
-                        href={url || "#"} 
-                        target="_blank" 
-                        rel="noreferrer" 
+                      <a
+                        href={url || "#"}
+                        target="_blank"
+                        rel="noreferrer"
                         className={`w-10 h-10 md:w-12 md:h-12 rounded-xl border border-white/10 flex items-center justify-center text-zinc-400 transition-all duration-300 
-                        ${!url ? 'opacity-20 grayscale' : 'hover:text-white hover:scale-110'} 
+                        ${!url || !isEnabled ? 'opacity-20 grayscale' : 'hover:text-white hover:scale-110'} 
                         ${platform.color === 'pink' ? 'hover:bg-pink-500 hover:border-pink-500' :
-                          platform.color === 'blue' ? 'hover:bg-blue-500 hover:border-blue-500' : 'hover:bg-red-500 hover:border-red-500'}`}
+                            platform.color === 'blue' ? 'hover:bg-blue-500 hover:border-blue-500' :
+                              platform.color === 'white' ? 'hover:bg-white hover:border-white hover:text-black' :
+                                'hover:bg-red-500 hover:border-red-500'}`}
                       >
                         <platform.icon className="w-5 h-5" strokeWidth={2} />
                       </a>
-                      
+
                       {/* Input URL hanya muncul saat Admin Mode diaktifkan */}
                       {isEditMode && (
                         <div className="absolute -top-10 left-0 w-32 bg-zinc-800 text-[10px] text-white p-1 rounded border border-orange-500 z-50 shadow-xl opacity-0 group-hover/social:opacity-100 transition-opacity">
-                          <input 
+                          <input
                             type="text"
                             placeholder={`Link ${platform.label}`}
                             value={url || ""}
@@ -202,11 +206,11 @@ export function Contact() {
           <div className="lg:col-span-2">
             <div className="bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6 md:p-8 relative overflow-hidden h-full">
               <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-orange-500/10 rounded-full blur-3xl"></div>
-              
+
               <div className="relative">
                 <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Send us a Message</h3>
                 <p className="text-zinc-400 text-sm mb-6 md:mb-8">Fill out the form below and we'll get back to you within 24 hours.</p>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                   {/* Bagian Input Form tetap identik dengan kode lama Anda */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">

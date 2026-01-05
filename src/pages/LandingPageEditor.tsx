@@ -2,8 +2,8 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import Home from './Home';
 import { useContent } from '../context/ContentContext';
 import { Button } from '../components/ui/button';
-import { 
-  ArrowLeft, Save, RotateCcw, MessageCircle, Settings, 
+import {
+  ArrowLeft, Save, RotateCcw, MessageCircle, Settings,
   Globe, Clock, Instagram, Facebook, Youtube, Linkedin, Twitter,
   UserCircle, FileText, Award, Trash2, Layout, Image as ImageIcon, Dumbbell,
   Crop as CropIcon, RefreshCcw, ZoomIn, ZoomOut
@@ -25,7 +25,7 @@ const createImage = (url: string): Promise<HTMLImageElement> =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous'); 
+    image.setAttribute('crossOrigin', 'anonymous');
     image.src = url;
   });
 
@@ -59,15 +59,15 @@ async function getCroppedImg(imageSrc: string, pixelCrop: any): Promise<Blob | n
 }
 
 export default function LandingPageEditor() {
-  const { 
-    setEditMode, resetContent, content, updateContent, 
+  const {
+    setEditMode, resetContent, content, updateContent,
     certificates, addCertificate, deleteCertificate,
     images, updateImage, deleteImage // ✅ deleteImage untuk reset logo
   } = useContent();
-  
+
   const navigate = useNavigate();
   const logoInputRef = useRef<HTMLInputElement>(null);
-  
+
   // --- STATE DIALOG ---
   const [isWaSettingsOpen, setIsWaSettingsOpen] = useState(false);
   const [isContactSettingsOpen, setIsContactSettingsOpen] = useState(false);
@@ -221,9 +221,6 @@ export default function LandingPageEditor() {
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           <Button variant="outline" size="sm" onClick={openSiteSettings} className="bg-transparent border-white/20 text-white"><Layout className="w-4 h-4 mr-2 text-blue-400" /> Branding</Button>
           <Button variant="outline" size="sm" onClick={() => setIsCertOpen(true)} className="bg-transparent border-white/20 text-white"><Award className="w-4 h-4 mr-2 text-yellow-500" /> Sertifikat</Button>
-          <Button variant="outline" size="sm" onClick={openAboutSettings} className="bg-transparent border-white/20 text-white"><UserCircle className="w-4 h-4 mr-2 text-indigo-400" /> Cerita Bio</Button>
-          <Button variant="outline" size="sm" onClick={openContactSettings} className="bg-transparent border-white/20 text-white"><Globe className="w-4 h-4 mr-2 text-orange-500" /> Kontak</Button>
-          <Button variant="outline" size="sm" onClick={openWaSettings} className="bg-transparent border-white/20 text-white"><MessageCircle className="w-4 h-4 mr-2 text-green-500" /> WA</Button>
           <Button variant="destructive" size="sm" onClick={handleReset}><RotateCcw className="w-4 h-4 mr-2" />Reset</Button>
           <Button className="bg-green-600 hover:bg-green-700 font-bold" size="sm" onClick={handleFinish}><Save className="w-4 h-4 mr-2" /> Selesai</Button>
         </div>
@@ -275,7 +272,7 @@ export default function LandingPageEditor() {
       </Dialog>
 
       {/* --- ✅ DIALOG CROPPER UI --- */}
-      <Dialog open={isCropperOpen} onOpenChange={(o) => { if(!o) { setIsCropperOpen(false); setIsSiteSettingsOpen(true); }}}>
+      <Dialog open={isCropperOpen} onOpenChange={(o) => { if (!o) { setIsCropperOpen(false); setIsSiteSettingsOpen(true); } }}>
         <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-lg shadow-2xl">
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-blue-400"><CropIcon /> Adjust Logo</DialogTitle></DialogHeader>
           <div className="space-y-6 py-4">
@@ -306,15 +303,15 @@ export default function LandingPageEditor() {
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-yellow-500"><Award /> Certificates Manager</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-3">
-              <Input placeholder="Certificate Name" value={newCert.name} onChange={e => setNewCert({...newCert, name: e.target.value})} className="bg-zinc-800" />
-              <Input placeholder="Issuer" value={newCert.issuer} onChange={e => setNewCert({...newCert, issuer: e.target.value})} className="bg-zinc-800" />
-              <Button className="w-full bg-orange-600" onClick={() => { if(newCert.name && newCert.issuer) { addCertificate(newCert); setNewCert({name:'', issuer:''}); toast.success("Added!"); } }}>Add Certificate</Button>
+              <Input placeholder="Certificate Name" value={newCert.name} onChange={e => setNewCert({ ...newCert, name: e.target.value })} className="bg-zinc-800" />
+              <Input placeholder="Issuer" value={newCert.issuer} onChange={e => setNewCert({ ...newCert, issuer: e.target.value })} className="bg-zinc-800" />
+              <Button className="w-full bg-orange-600" onClick={() => { if (newCert.name && newCert.issuer) { addCertificate(newCert); setNewCert({ name: '', issuer: '' }); toast.success("Added!"); } }}>Add Certificate</Button>
             </div>
             <div className="max-h-60 overflow-y-auto space-y-2 custom-scrollbar">
               {certificates.map(c => (
                 <div key={c.id} className="flex justify-between items-center bg-zinc-800/50 p-3 rounded-lg border border-white/5">
                   <div><div className="text-sm font-bold text-white">{c.name}</div><div className="text-[10px] opacity-40 uppercase">{c.issuer}</div></div>
-                  <Button variant="ghost" size="sm" onClick={() => { deleteCertificate(c.id); toast.info("Deleted."); }} className="text-white/20 hover:text-red-500"><Trash2 className="w-4 h-4"/></Button>
+                  <Button variant="ghost" size="sm" onClick={() => { deleteCertificate(c.id); toast.info("Deleted."); }} className="text-white/20 hover:text-red-500"><Trash2 className="w-4 h-4" /></Button>
                 </div>
               ))}
             </div>
