@@ -23,6 +23,7 @@ import {
   Facebook,
   Youtube,
   Linkedin,
+  Twitter,
   Music2,
   UserCircle,
   Target,
@@ -54,7 +55,8 @@ export default function Settings() {
     facebook: '',
     youtube: '',
     tiktok: '',
-    linkedin: ''
+    linkedin: '',
+    twitter: ''
   });
 
   // Social Media Toggle State
@@ -63,7 +65,8 @@ export default function Settings() {
     facebook: true,
     youtube: true,
     tiktok: true,
-    linkedin: true
+    linkedin: true,
+    twitter: true
   });
 
   // Intro Video State
@@ -110,14 +113,16 @@ export default function Settings() {
       facebook: content["social.facebook"] || "",
       youtube: content["social.youtube"] || "",
       tiktok: content["social.tiktok"] || "",
-      linkedin: content["social.linkedin"] || ""
+      linkedin: content["social.linkedin"] || "",
+      twitter: content["social.twitter"] || ""
     });
     setSocialEnabled({
       instagram: content["social.instagram.enabled"] !== "false",
       facebook: content["social.facebook.enabled"] !== "false",
       youtube: content["social.youtube.enabled"] !== "false",
       tiktok: content["social.tiktok.enabled"] !== "false",
-      linkedin: content["social.linkedin.enabled"] !== "false"
+      linkedin: content["social.linkedin.enabled"] !== "false",
+      twitter: content["social.twitter.enabled"] !== "false"
     });
     setVideoData({
       video_url: content["intro.video_url"] || "",
@@ -165,11 +170,13 @@ export default function Settings() {
         updateContent("social.youtube", formData.youtube),
         updateContent("social.tiktok", formData.tiktok),
         updateContent("social.linkedin", formData.linkedin),
+        updateContent("social.twitter", formData.twitter),
         updateContent("social.instagram.enabled", String(socialEnabled.instagram)),
         updateContent("social.facebook.enabled", String(socialEnabled.facebook)),
         updateContent("social.youtube.enabled", String(socialEnabled.youtube)),
         updateContent("social.tiktok.enabled", String(socialEnabled.tiktok)),
         updateContent("social.linkedin.enabled", String(socialEnabled.linkedin)),
+        updateContent("social.twitter.enabled", String(socialEnabled.twitter)),
       ];
       await Promise.all(promises);
       toast.success("Social media settings saved!");
@@ -969,6 +976,30 @@ export default function Settings() {
                   className={`relative w-14 h-7 rounded-full transition-all ${socialEnabled.linkedin ? 'bg-blue-600' : 'bg-zinc-700'}`}
                 >
                   <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${socialEnabled.linkedin ? 'left-8' : 'left-1'}`} />
+                </button>
+              </div>
+
+              {/* Twitter / X */}
+              <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${socialEnabled.twitter ? 'bg-zinc-800 border-white/20' : 'bg-zinc-800/50 border-white/5 opacity-50'}`}>
+                <div className="p-2 bg-black rounded-lg border border-white/20">
+                  <Twitter className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Twitter / X</Label>
+                  <Input
+                    value={formData.twitter}
+                    onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                    placeholder="https://twitter.com/username"
+                    className="bg-black/40 border-white/20 mt-1"
+                    disabled={!socialEnabled.twitter}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSocialEnabled({ ...socialEnabled, twitter: !socialEnabled.twitter })}
+                  className={`relative w-14 h-7 rounded-full transition-all ${socialEnabled.twitter ? 'bg-white' : 'bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 rounded-full transition-all ${socialEnabled.twitter ? 'left-8 bg-black' : 'left-1 bg-white'}`} />
                 </button>
               </div>
               <div className="flex justify-end pt-2">
