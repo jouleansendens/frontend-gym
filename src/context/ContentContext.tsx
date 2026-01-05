@@ -7,8 +7,16 @@ export type FAQItem = { id: string; question: string; answer: string; };
 export type LeaderboardItem = { id: string; name: string; steps: number; };
 export type MessageItem = { id: string; firstName: string; lastName: string; email: string; phone: string; goal: string; message: string; date: string; isRead: boolean; };
 export type CertificateItem = { id: string; name: string; issuer: string; };
-export type TestimonialItem = { id: string; name: string; role: string; image: string; rating: number; text: string; isActive: boolean; };
-
+export type TestimonialItem = { 
+  id: string; 
+  name: string; 
+  role: string; 
+  image: string; 
+  rating: number; 
+  text: string; 
+  isActive: boolean | number; // ✅ Terima boolean atau number dari database
+  is_active?: boolean | number; // ✅ Alias untuk backward compatibility
+};
 // --- DEFAULT CONTENT ---
 const defaultContent: Record<string, string> = {
   "hero.badge": "Certified Personal Trainer",

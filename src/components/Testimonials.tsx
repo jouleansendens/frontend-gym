@@ -9,16 +9,18 @@ export function Testimonials() {
 
   // ✅ Perbaikan: Cek is_active (sesuai SQL) atau isActive
   const activeTestimonials = testimonials
-    .filter(t => t.is_active === 1 || t.is_active === true || t.isActive === true)
+    .filter(t => {
+      // Cek berbagai format boolean dari database
+      return t.isActive === true || 
+             t.isActive === 1 || 
+             t.is_active === true || 
+             t.is_active === 1;
+    })
     .slice(0, displayCount);
 
-  // Ubah null menjadi pesan debug sementara jika data tidak muncul
+  // Jika tidak ada testimonial aktif, jangan render section ini sama sekali
   if (activeTestimonials.length === 0) {
-    return (
-      <div className="py-10 text-center text-white/20 bg-zinc-950">
-        No active testimonials found in database.
-      </div>
-    );
+    return null;
   }
 
   return (
