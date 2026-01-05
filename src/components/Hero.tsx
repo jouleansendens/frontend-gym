@@ -28,7 +28,7 @@ export function Hero() {
         <div className="absolute inset-0 bg-black">
           <div className="absolute inset-0 bg-gradient-to-r from-black via-zinc-900 to-black opacity-90" />
         </div>
-        
+
         <img
           // Logic: Gunakan gambar dari context jika ada, jika tidak pakai default Unsplash
           src={images['hero.bg'] || "https://images.unsplash.com/photo-1549995546-87cb41aa98a4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080"}
@@ -48,12 +48,12 @@ export function Hero() {
         )}
 
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/40" />
-        
+
         {/* Input File Tersembunyi */}
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          className="hidden" 
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
           accept="image/*"
           onChange={handleFileChange}
         />
@@ -66,13 +66,16 @@ export function Hero() {
           <div className="inline-block bg-orange-500/20 border border-orange-500 px-4 py-2 rounded-full mb-6">
             <Editable id="hero.badge" as="span" className="text-orange-500 text-sm font-medium" defaultText="Certified Personal Trainer" />
           </div>
-          
+
           <Editable id="hero.title" as="h1" type="textarea" className="text-white mb-6 text-4xl md:text-5xl lg:text-6xl font-bold leading-tight" defaultText="Transform Your Body, Transform Your Life" />
-          
+
           <Editable id="hero.subtitle" as="p" type="textarea" className="text-white/80 text-lg md:text-xl mb-8 max-w-2xl" defaultText="Achieve your fitness goals with personalized 1-on-1 coaching." />
 
           <div className="flex flex-col sm:flex-row gap-4 mb-16">
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full transition-colors flex items-center justify-center gap-2 group font-medium">
+            <button
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full transition-colors flex items-center justify-center gap-2 group font-medium"
+            >
               <Editable id="hero.cta_primary" as="span" defaultText="Start Your Journey" />
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
