@@ -313,61 +313,61 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // ✅ Load data dari MySQL saat inisialisasi
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Load semua data dari Laravel API
-        const [
-          contentData,
-          servicesData,
-          pricingData,
-          faqsData,
-          leaderboardData,
-          messagesData,
-          imagesData,
-          certificatesData,
-          testimonialsData
-        ] = await Promise.all([
-          apiCall('/content'),
-          apiCall('/services'),
-          apiCall('/pricing'),
-          apiCall('/faqs'),
-          apiCall('/leaderboard'),
-          apiCall('/messages'),
-          apiCall('/images'),
-          apiCall('/certificates'),
-          apiCall('/testimonials')
-        ]);
+  // ✅ Load data dari MySQL saat inisialisasi / Reset
+  const loadData = async () => {
+    try {
+      // Load semua data dari Laravel API
+      const [
+        contentData,
+        servicesData,
+        pricingData,
+        faqsData,
+        leaderboardData,
+        messagesData,
+        imagesData,
+        certificatesData,
+        testimonialsData
+      ] = await Promise.all([
+        apiCall('/content'),
+        apiCall('/services'),
+        apiCall('/pricing'),
+        apiCall('/faqs'),
+        apiCall('/leaderboard'),
+        apiCall('/messages'),
+        apiCall('/images'),
+        apiCall('/certificates'),
+        apiCall('/testimonials')
+      ]);
 
-        // Set state dengan data dari database
-        if (contentData?.data) {
-          setContent({ ...defaultContent, ...contentData.data });
-          // Load Layout Order if exists
-          if (contentData.data['site.layout_order']) {
-            try {
-              const rawData = contentData.data['site.layout_order'];
-              // Handle both string (JSON) and array (already parsed by backend)
-              const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-              if (Array.isArray(parsed)) setSections(parsed);
-            } catch (e) {
-              console.error('Failed to parse layout order', e);
-            }
+      // Set state dengan data dari database
+      if (contentData?.data) {
+        setContent({ ...defaultContent, ...contentData.data });
+        // Load Layout Order if exists
+        if (contentData.data['site.layout_order']) {
+          try {
+            const rawData = contentData.data['site.layout_order'];
+            // Handle both string (JSON) and array (already parsed by backend)
+            const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+            if (Array.isArray(parsed)) setSections(parsed);
+          } catch (e) {
+            console.error('Failed to parse layout order', e);
           }
         }
-        if (servicesData?.data) setServices(servicesData.data);
-        if (pricingData?.data) setPricing(pricingData.data);
-        if (faqsData?.data) setFaqs(faqsData.data);
-        if (leaderboardData?.data) setLeaderboard(leaderboardData.data);
-        if (messagesData?.data) setMessages(messagesData.data);
-        if (imagesData?.data) setImages(imagesData.data);
-        if (certificatesData?.data) setCertificates(certificatesData.data);
-        if (testimonialsData?.data) setTestimonials(testimonialsData.data);
-      } catch (error) {
-        console.error('Failed to load initial data:', error);
       }
-    };
+      if (servicesData?.data) setServices(servicesData.data);
+      if (pricingData?.data) setPricing(pricingData.data);
+      if (faqsData?.data) setFaqs(faqsData.data);
+      if (leaderboardData?.data) setLeaderboard(leaderboardData.data);
+      if (messagesData?.data) setMessages(messagesData.data);
+      if (imagesData?.data) setImages(imagesData.data);
+      if (certificatesData?.data) setCertificates(certificatesData.data);
+      if (testimonialsData?.data) setTestimonials(testimonialsData.data);
+    } catch (error) {
+      console.error('Failed to load initial data:', error);
+    }
+  };
 
+  useEffect(() => {
     loadData();
   }, []);
 
@@ -613,22 +613,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // --- RESET ---
+  // --- RESET (Discard Changes & Reload) ---
   const resetContent = async () => {
-    setContent(defaultContent);
-    setServices(defaultServices);
-    setPricing(defaultPricing);
-    setCertificates([]);
-    setImages({});
-    setTestimonials(defaultTestimonials);
-    setFaqs(defaultFaqs);
-    setLeaderboard(defaultLeaderboard);
-
-    try {
-      await apiCall('/reset', 'POST');
-    } catch (error) {
-      console.error('Failed to reset content:', error);
-    }
+    // Reload data dari database (mengembalikan ke kondisi save terakhir)
+    await loadData();
+    console.log("Changes discarded, data reloaded from DB");
   };
 
   return (
