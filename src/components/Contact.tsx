@@ -8,6 +8,13 @@ import { useContent } from '../context/ContentContext';
 import { toast } from 'sonner';
 import { Editable } from './editor/Editable';
 
+// Custom X Logo Component
+const XIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
+
 export function Contact() {
   const { addMessage, content, updateContent, isEditMode } = useContent();
   const [formData, setFormData] = useState({
@@ -23,7 +30,7 @@ export function Contact() {
     { key: "social.youtube", enableKey: "social.youtube.enabled", icon: Youtube, label: "YouTube", color: "red" },
     { key: "social.tiktok", enableKey: "social.tiktok.enabled", icon: Music2, label: "TikTok", color: "white" },
     { key: "social.linkedin", enableKey: "social.linkedin.enabled", icon: Linkedin, label: "LinkedIn", color: "blue" },
-    { key: "social.twitter", enableKey: "social.twitter.enabled", icon: Twitter, label: "Twitter/X", color: "blue" },
+    { key: "social.twitter", enableKey: "social.twitter.enabled", icon: XIcon, label: "X (Twitter)", color: "white" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
