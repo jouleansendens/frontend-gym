@@ -160,7 +160,7 @@ export function Contact() {
                         ${!url || !isEnabled ? 'opacity-20 grayscale' : 'hover:text-white hover:scale-110'} 
                         ${platform.color === 'pink' ? 'hover:bg-pink-500 hover:border-pink-500' :
                             platform.color === 'blue' ? 'hover:bg-blue-500 hover:border-blue-500' :
-                              platform.color === 'white' ? 'hover:bg-white hover:border-white hover:text-black' :
+                              platform.color === 'white' ? 'hover:bg-white hover:border-white hover:!text-black' :
                                 'hover:bg-red-500 hover:border-red-500'}`}
                       >
                         <platform.icon className="w-5 h-5" strokeWidth={2} />

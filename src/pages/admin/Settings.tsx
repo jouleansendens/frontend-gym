@@ -41,6 +41,7 @@ import {
 export default function Settings() {
   const { content, updateContent, certificates, addCertificate, updateCertificate, deleteCertificate, sections, updateSections } = useContent();
   const [isAccountLoading, setIsAccountLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Website Settings State
   const [formData, setFormData] = useState({
@@ -97,6 +98,8 @@ export default function Settings() {
   const [newCert, setNewCert] = useState({ name: '', issuer: '' });
 
   useEffect(() => {
+    if (isSaving) return; // Prevent overwriting while saving to avoid flicker
+
     setFormData({
       wa_phone: content["contact.phone"] || "",
       wa_template: content["contact.wa_template"] || "",
@@ -136,44 +139,59 @@ export default function Settings() {
 
   // Handler for Contact Information
   const handleSaveContact = async () => {
-    const promises = [
-      updateContent("contact.phone", formData.wa_phone),
-      updateContent("contact.wa_template", formData.wa_template),
-      updateContent("contact.email", formData.email),
-      updateContent("contact.display_phone", formData.display_phone),
-      updateContent("contact.address", formData.address),
-    ];
-    await Promise.all(promises);
-    toast.success("Contact information saved!");
+    setIsSaving(true);
+    try {
+      const promises = [
+        updateContent("contact.phone", formData.wa_phone),
+        updateContent("contact.wa_template", formData.wa_template),
+        updateContent("contact.email", formData.email),
+        updateContent("contact.display_phone", formData.display_phone),
+        updateContent("contact.address", formData.address),
+      ];
+      await Promise.all(promises);
+      toast.success("Contact information saved!");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Handler for Social Media
   const handleSaveSocial = async () => {
-    const promises = [
-      updateContent("social.instagram", formData.instagram),
-      updateContent("social.facebook", formData.facebook),
-      updateContent("social.youtube", formData.youtube),
-      updateContent("social.tiktok", formData.tiktok),
-      updateContent("social.linkedin", formData.linkedin),
-      updateContent("social.instagram.enabled", String(socialEnabled.instagram)),
-      updateContent("social.facebook.enabled", String(socialEnabled.facebook)),
-      updateContent("social.youtube.enabled", String(socialEnabled.youtube)),
-      updateContent("social.tiktok.enabled", String(socialEnabled.tiktok)),
-      updateContent("social.linkedin.enabled", String(socialEnabled.linkedin)),
-    ];
-    await Promise.all(promises);
-    toast.success("Social media settings saved!");
+    setIsSaving(true);
+    try {
+      const promises = [
+        updateContent("social.instagram", formData.instagram),
+        updateContent("social.facebook", formData.facebook),
+        updateContent("social.youtube", formData.youtube),
+        updateContent("social.tiktok", formData.tiktok),
+        updateContent("social.linkedin", formData.linkedin),
+        updateContent("social.instagram.enabled", String(socialEnabled.instagram)),
+        updateContent("social.facebook.enabled", String(socialEnabled.facebook)),
+        updateContent("social.youtube.enabled", String(socialEnabled.youtube)),
+        updateContent("social.tiktok.enabled", String(socialEnabled.tiktok)),
+        updateContent("social.linkedin.enabled", String(socialEnabled.linkedin)),
+      ];
+      await Promise.all(promises);
+      toast.success("Social media settings saved!");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Handler for Saving ALL (Header Button)
   const handleSaveAll = async () => {
-    await Promise.all([
-      handleSaveContact(),
-      handleSaveSocial(),
-      handleSaveVideo(),
-      handleSaveCoachProfile(),
-    ]);
-    toast.success("All settings saved successfully!");
+    setIsSaving(true);
+    try {
+      await Promise.all([
+        handleSaveContact(), // Note: recursive isSaving set might be redundant but safe
+        handleSaveSocial(),
+        handleSaveVideo(),
+        handleSaveCoachProfile(),
+      ]);
+      toast.success("All settings saved successfully!");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Handler for Video Content
