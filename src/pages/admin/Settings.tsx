@@ -22,6 +22,7 @@ import {
   Instagram,
   Facebook,
   Youtube,
+  Linkedin,
   Music2,
   UserCircle,
   Target,
@@ -51,7 +52,8 @@ export default function Settings() {
     instagram: '',
     facebook: '',
     youtube: '',
-    tiktok: ''
+    tiktok: '',
+    linkedin: ''
   });
 
   // Social Media Toggle State
@@ -59,7 +61,8 @@ export default function Settings() {
     instagram: true,
     facebook: true,
     youtube: true,
-    tiktok: true
+    tiktok: true,
+    linkedin: true
   });
 
   // Intro Video State
@@ -103,13 +106,15 @@ export default function Settings() {
       instagram: content["social.instagram"] || "",
       facebook: content["social.facebook"] || "",
       youtube: content["social.youtube"] || "",
-      tiktok: content["social.tiktok"] || ""
+      tiktok: content["social.tiktok"] || "",
+      linkedin: content["social.linkedin"] || ""
     });
     setSocialEnabled({
       instagram: content["social.instagram.enabled"] !== "false",
       facebook: content["social.facebook.enabled"] !== "false",
       youtube: content["social.youtube.enabled"] !== "false",
-      tiktok: content["social.tiktok.enabled"] !== "false"
+      tiktok: content["social.tiktok.enabled"] !== "false",
+      linkedin: content["social.linkedin.enabled"] !== "false"
     });
     setVideoData({
       video_url: content["intro.video_url"] || "",
@@ -129,23 +134,46 @@ export default function Settings() {
     });
   }, [content]);
 
-  // Handler for Website Content
-  const handleSaveContent = () => {
-    updateContent("contact.phone", formData.wa_phone);
-    updateContent("contact.wa_template", formData.wa_template);
-    updateContent("contact.email", formData.email);
-    updateContent("contact.display_phone", formData.display_phone);
-    updateContent("contact.address", formData.address);
-    updateContent("social.instagram", formData.instagram);
-    updateContent("social.facebook", formData.facebook);
-    updateContent("social.youtube", formData.youtube);
-    updateContent("social.tiktok", formData.tiktok);
-    updateContent("social.instagram.enabled", String(socialEnabled.instagram));
-    updateContent("social.facebook.enabled", String(socialEnabled.facebook));
-    updateContent("social.youtube.enabled", String(socialEnabled.youtube));
-    updateContent("social.tiktok.enabled", String(socialEnabled.tiktok));
+  // Handler for Contact Information
+  const handleSaveContact = async () => {
+    const promises = [
+      updateContent("contact.phone", formData.wa_phone),
+      updateContent("contact.wa_template", formData.wa_template),
+      updateContent("contact.email", formData.email),
+      updateContent("contact.display_phone", formData.display_phone),
+      updateContent("contact.address", formData.address),
+    ];
+    await Promise.all(promises);
+    toast.success("Contact information saved!");
+  };
 
-    toast.success("Website settings saved successfully!");
+  // Handler for Social Media
+  const handleSaveSocial = async () => {
+    const promises = [
+      updateContent("social.instagram", formData.instagram),
+      updateContent("social.facebook", formData.facebook),
+      updateContent("social.youtube", formData.youtube),
+      updateContent("social.tiktok", formData.tiktok),
+      updateContent("social.linkedin", formData.linkedin),
+      updateContent("social.instagram.enabled", String(socialEnabled.instagram)),
+      updateContent("social.facebook.enabled", String(socialEnabled.facebook)),
+      updateContent("social.youtube.enabled", String(socialEnabled.youtube)),
+      updateContent("social.tiktok.enabled", String(socialEnabled.tiktok)),
+      updateContent("social.linkedin.enabled", String(socialEnabled.linkedin)),
+    ];
+    await Promise.all(promises);
+    toast.success("Social media settings saved!");
+  };
+
+  // Handler for Saving ALL (Header Button)
+  const handleSaveAll = async () => {
+    await Promise.all([
+      handleSaveContact(),
+      handleSaveSocial(),
+      handleSaveVideo(),
+      handleSaveCoachProfile(),
+    ]);
+    toast.success("All settings saved successfully!");
   };
 
   // Handler for Video Content
@@ -243,7 +271,7 @@ export default function Settings() {
             </h2>
             <p className="text-white/60">Manage your contact details, integrations, and account security.</p>
           </div>
-          <Button onClick={handleSaveContent} className="bg-orange-500 hover:bg-orange-600 text-white px-6">
+          <Button onClick={handleSaveAll} className="bg-orange-500 hover:bg-orange-600 text-white px-6">
             <Save className="w-4 h-4 mr-2" /> Save All Changes
           </Button>
         </div>
@@ -779,6 +807,14 @@ export default function Settings() {
                   className="bg-black/40 border-white/20 min-h-[80px]"
                 />
               </div>
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handleSaveContact}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save Contact Info
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -893,11 +929,43 @@ export default function Settings() {
                   <div className={`absolute top-1 w-5 h-5 rounded-full transition-all ${socialEnabled.tiktok ? 'left-8 bg-black' : 'left-1 bg-white'}`} />
                 </button>
               </div>
+
+              {/* LinkedIn */}
+              <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${socialEnabled.linkedin ? 'bg-blue-600/10 border-blue-600/20' : 'bg-zinc-800/50 border-white/5 opacity-50'}`}>
+                <div className="p-2 bg-blue-700 rounded-lg">
+                  <Linkedin className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">LinkedIn</Label>
+                  <Input
+                    value={formData.linkedin}
+                    onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                    placeholder="https://linkedin.com/in/username"
+                    className="bg-black/40 border-white/20 mt-1"
+                    disabled={!socialEnabled.linkedin}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSocialEnabled({ ...socialEnabled, linkedin: !socialEnabled.linkedin })}
+                  className={`relative w-14 h-7 rounded-full transition-all ${socialEnabled.linkedin ? 'bg-blue-600' : 'bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all ${socialEnabled.linkedin ? 'left-8' : 'left-1'}`} />
+                </button>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handleSaveSocial}
+                  className="bg-purple-500 hover:bg-purple-600 text-white"
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save Social Links
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
         </div>
       </div>
-    </AdminLayout>
+    </AdminLayout >
   );
 }
