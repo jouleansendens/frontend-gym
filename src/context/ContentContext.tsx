@@ -346,7 +346,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           // Load Layout Order if exists
           if (contentData.data['site.layout_order']) {
             try {
-              const parsed = JSON.parse(contentData.data['site.layout_order']);
+              const rawData = contentData.data['site.layout_order'];
+              // Handle both string (JSON) and array (already parsed by backend)
+              const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
               if (Array.isArray(parsed)) setSections(parsed);
             } catch (e) {
               console.error('Failed to parse layout order', e);
