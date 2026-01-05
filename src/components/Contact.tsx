@@ -67,25 +67,8 @@ export function Contact() {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] md:bg-[size:72px_72px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)]"></div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* Header Section */}
-        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs md:text-sm font-medium mb-4 md:mb-6">
-            <MessageSquare className="w-4 h-4" />
-            <Editable id="contact.badge" defaultText="GET IN TOUCH" as="span" />
-          </div>
-          <h2 className="text-3xl md:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight">
-            <Editable id="contact.title.top" defaultText="Let's Start Your" as="span" />
-            <span className="block bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-              <Editable id="contact.title.bottom" defaultText="Transformation" as="span" />
-            </span>
-          </h2>
-          <Editable
-            id="contact.subtitle"
-            as="p"
-            className="text-zinc-400 text-sm md:text-lg leading-relaxed px-4"
-            defaultText="Ready to take the first step? Reach out for a free consultation and let's discuss how we can achieve your fitness goals together."
-          />
-        </div>
+        {/* Header Removed per Request */}
+
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
           {/* Sisi Kiri: Informasi Kontak */}
