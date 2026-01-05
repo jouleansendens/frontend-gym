@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 
 export default function Settings() {
-  const { content, updateContent, certificates, addCertificate, deleteCertificate } = useContent();
+  const { content, updateContent, certificates, addCertificate, updateCertificate, deleteCertificate } = useContent();
   const [isAccountLoading, setIsAccountLoading] = useState(false);
 
   // Website Settings State
@@ -547,27 +547,58 @@ export default function Settings() {
                 {certificates && certificates.length > 0 ? (
                   <div className="grid gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                     {certificates.map((cert) => (
-                      <div key={cert.id} className="flex items-center justify-between bg-black/40 border border-white/5 p-3 rounded-lg group hover:border-yellow-500/30 transition-colors">
+                      <div key={cert.id} className={`flex items-center justify-between bg-black/40 border p-3 rounded-lg group transition-colors ${Boolean(cert.featured) ? 'border-green-500/30 bg-green-500/5' : 'border-white/5 hover:border-yellow-500/30'}`}>
                         <div className="flex items-center gap-3">
-                          <div className="bg-yellow-500/10 p-2 rounded-lg">
-                            <FileCheck className="w-4 h-4 text-yellow-500" />
+                          <div className={`p-2 rounded-lg ${Boolean(cert.featured) ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
+                            <FileCheck className={`w-4 h-4 ${Boolean(cert.featured) ? 'text-green-500' : 'text-yellow-500'}`} />
                           </div>
                           <div>
                             <div className="font-medium text-white text-sm">{cert.name}</div>
                             <div className="text-[10px] text-white/40 uppercase tracking-wider">{cert.issuer}</div>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            deleteCertificate(cert.id);
-                            toast.info("Certificate deleted");
-                          }}
-                          className="text-white/20 hover:text-red-500 hover:bg-red-500/10"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {/* Featured Toggle */}
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] uppercase tracking-wider ${Boolean(cert.featured) ? 'text-green-400' : 'text-white/30'}`}>
+                              {Boolean(cert.featured) ? 'Tampil' : 'Sembunyi'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const isFeatured = Boolean(cert.featured);
+                                const newFeatured = !isFeatured;
+
+                                if (newFeatured) {
+                                  const currentFeaturedCount = certificates.filter(c => Boolean(c.featured)).length;
+                                  if (currentFeaturedCount >= 2) {
+                                    toast.error("Maksimal hanya 2 sertifikat yang bisa ditampilkan di landing page!");
+                                    return;
+                                  }
+                                }
+
+                                updateCertificate(cert.id, { featured: newFeatured });
+                                toast.success(newFeatured ? 'Ditampilkan di landing page!' : 'Disembunyikan dari landing page');
+                              }}
+                              className={`relative w-12 h-6 rounded-full transition-all cursor-pointer shadow-inner ${Boolean(cert.featured) ? 'bg-green-500' : 'bg-zinc-600'}`}
+                            >
+                              <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all duration-200 ${Boolean(cert.featured) ? 'left-7' : 'left-1'}`} />
+                            </button>
+                          </div>
+                          {/* Delete Button */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              deleteCertificate(cert.id);
+                              toast.info("Certificate deleted");
+                            }}
+                            className="text-white/20 hover:text-red-500 hover:bg-red-500/10"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

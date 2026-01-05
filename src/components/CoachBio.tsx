@@ -104,37 +104,24 @@ export function CoachBio() {
               defaultText="My approach focuses on functional movement and nutrition tailored to your lifestyle."
             />
 
-            {/* Sertifikasi Ringkasan (Statis di Landing Page) */}
-            <div className="grid grid-cols-2 gap-6 mb-10">
-              <div className="border-l-2 border-orange-500 pl-4">
-                <Editable
-                  id="coach.cert1.title"
-                  as="h4"
-                  className="font-bold text-2xl text-white"
-                  defaultText="NASM"
-                />
-                <Editable
-                  id="coach.cert1.desc"
-                  as="p"
-                  className="text-xs text-white/40 uppercase tracking-wider"
-                  defaultText="Certified Personal Trainer"
-                />
+            {/* Sertifikasi Featured (Dinamis dari Database) */}
+            {certificates && certificates.filter(c => c.featured).length > 0 && (
+              <div className="grid grid-cols-2 gap-6 mb-10">
+                {certificates.filter(c => c.featured).slice(0, 2).map((cert) => (
+                  <div key={cert.id} className="border-l-2 border-orange-500 pl-4">
+                    <h4 className="font-bold text-2xl text-white">{cert.name}</h4>
+                    <p className="text-xs text-white/40 uppercase tracking-wider">{cert.issuer}</p>
+                  </div>
+                ))}
               </div>
-              <div className="border-l-2 border-orange-500 pl-4">
-                <Editable
-                  id="coach.cert2.title"
-                  as="h4"
-                  className="font-bold text-2xl text-white"
-                  defaultText="PN1"
-                />
-                <Editable
-                  id="coach.cert2.desc"
-                  as="p"
-                  className="text-xs text-white/40 uppercase tracking-wider"
-                  defaultText="Nutrition Coach"
-                />
+            )}
+
+            {/* Fallback jika tidak ada certificate featured (hanya di edit mode) */}
+            {isEditMode && (!certificates || certificates.filter(c => c.featured).length === 0) && (
+              <div className="border border-dashed border-white/20 rounded-xl p-4 mb-10 text-center">
+                <p className="text-white/30 text-sm">No featured certificates. Add certificates in Settings and toggle "Featured" to display them here.</p>
               </div>
-            </div>
+            )}
 
             {/* Tombol Pemicu Modal Bio & Sertifikat */}
             <div

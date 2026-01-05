@@ -6,7 +6,7 @@ export type PricingItem = { id: string; name: string; price: string; period: str
 export type FAQItem = { id: string; question: string; answer: string; };
 export type LeaderboardItem = { id: string; name: string; steps: number; };
 export type MessageItem = { id: string; firstName: string; lastName: string; email: string; phone: string; goal: string; message: string; date: string; isRead: boolean; };
-export type CertificateItem = { id: string; name: string; issuer: string; };
+export type CertificateItem = { id: string; name: string; issuer: string; featured: boolean; };
 export type TestimonialItem = {
   id: string;
   name: string;
@@ -234,6 +234,7 @@ interface ContentContextType {
   resetContent: () => void;
   certificates: CertificateItem[];
   addCertificate: (data: any) => void;
+  updateCertificate: (id: string, data: any) => void;
   deleteCertificate: (id: string) => void;
   testimonials: TestimonialItem[];
   addTestimonial: (data: any) => void;
@@ -487,10 +488,21 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   // --- CERTIFICATES MANAGEMENT ---
   const addCertificate = async (data: any) => {
     try {
-      const result = await apiCall('/certificates', 'POST', data);
+      const result = await apiCall('/certificates', 'POST', { ...data, featured: false });
       setCertificates(prev => [...prev, result.data]);
     } catch (error) {
       console.error('Failed to add certificate:', error);
+    }
+  };
+
+  const updateCertificate = async (id: string, data: any) => {
+    // Optimistic update: update UI immediately
+    setCertificates(prev => prev.map(item => item.id === id ? { ...item, ...data } : item));
+    try {
+      await apiCall(`/certificates/${id}`, 'PUT', data);
+    } catch (error) {
+      console.error('Failed to update certificate:', error);
+      // Optional: rollback here if needed, but for now allow UI consistency
     }
   };
 
@@ -588,7 +600,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       images, updateImage, deleteImage,
       isEditMode, setEditMode,
       resetContent,
-      certificates, addCertificate, deleteCertificate,
+      certificates, addCertificate, updateCertificate, deleteCertificate,
       testimonials, addTestimonial, updateTestimonial, deleteTestimonial
     }}>
       {children}
