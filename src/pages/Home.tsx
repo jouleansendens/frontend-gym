@@ -12,6 +12,7 @@ import { Footer } from '../components/Footer';
 import { QuoteBanner } from '../components/QuoteBanner';
 import SEO from '../components/SEO';
 import { useContent } from '../context/ContentContext';
+import { FloatingWhatsApp } from '../components/FloatingWhatsApp';
 
 export default function Home() {
   const { sections } = useContent();
@@ -49,6 +50,7 @@ export default function Home() {
       })}
 
       <Footer />
+      <FloatingWhatsApp />
     </main>
   );
 }
