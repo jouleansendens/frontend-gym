@@ -22,11 +22,18 @@ import {
   Instagram,
   Facebook,
   Youtube,
-  Music2
+  Music2,
+  UserCircle,
+  Target,
+  Heart,
+  Zap,
+  Award,
+  FileCheck,
+  Trash2
 } from 'lucide-react';
 
 export default function Settings() {
-  const { content, updateContent } = useContent();
+  const { content, updateContent, certificates, addCertificate, deleteCertificate } = useContent();
   const [isAccountLoading, setIsAccountLoading] = useState(false);
 
   // Website Settings State
@@ -57,6 +64,19 @@ export default function Settings() {
     description: ''
   });
 
+  // Coach Profile State
+  const [coachProfile, setCoachProfile] = useState({
+    journey: '',
+    value1_title: '',
+    value1_desc: '',
+    value2_title: '',
+    value2_desc: '',
+    value3_title: '',
+    value3_desc: '',
+    value4_title: '',
+    value4_desc: ''
+  });
+
   // Account Settings State (Username & Password)
   const [accountData, setAccountData] = useState({
     username: '',
@@ -64,6 +84,9 @@ export default function Settings() {
     newPassword: '',
     confirmPassword: ''
   });
+
+  // New Certificate State
+  const [newCert, setNewCert] = useState({ name: '', issuer: '' });
 
   useEffect(() => {
     setFormData({
@@ -87,6 +110,17 @@ export default function Settings() {
       video_url: content["intro.video_url"] || "",
       title: content["intro.title"] || "",
       description: content["intro.description"] || ""
+    });
+    setCoachProfile({
+      journey: content["about.modal_content"] || "",
+      value1_title: content["about.value1.title"] || "",
+      value1_desc: content["about.value1.desc"] || "",
+      value2_title: content["about.value2.title"] || "",
+      value2_desc: content["about.value2.desc"] || "",
+      value3_title: content["about.value3.title"] || "",
+      value3_desc: content["about.value3.desc"] || "",
+      value4_title: content["about.value4.title"] || "",
+      value4_desc: content["about.value4.desc"] || ""
     });
   }, [content]);
 
@@ -116,6 +150,21 @@ export default function Settings() {
     updateContent("intro.description", videoData.description);
 
     toast.success("Intro video settings saved!");
+  };
+
+  // Handler for Coach Profile
+  const handleSaveCoachProfile = () => {
+    updateContent("about.modal_content", coachProfile.journey);
+    updateContent("about.value1.title", coachProfile.value1_title);
+    updateContent("about.value1.desc", coachProfile.value1_desc);
+    updateContent("about.value2.title", coachProfile.value2_title);
+    updateContent("about.value2.desc", coachProfile.value2_desc);
+    updateContent("about.value3.title", coachProfile.value3_title);
+    updateContent("about.value3.desc", coachProfile.value3_desc);
+    updateContent("about.value4.title", coachProfile.value4_title);
+    updateContent("about.value4.desc", coachProfile.value4_desc);
+
+    toast.success("Coach profile saved!");
   };
 
   // Handler for Admin Account (API Call)
@@ -313,7 +362,223 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* --- CARD 2: WHATSAPP CONFIGURATION --- */}
+          {/* --- CARD: COACH PROFILE & BIO --- */}
+          <Card className="bg-zinc-900 border-white/10 text-white">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-500/10 rounded-lg">
+                  <UserCircle className="w-5 h-5 text-indigo-500" />
+                </div>
+                <div>
+                  <CardTitle>Coach Profile & Bio</CardTitle>
+                  <CardDescription className="text-white/50">
+                    Your story and core values displayed in the "Read My Full Story" modal.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* The Journey / Story */}
+              <div className="space-y-2">
+                <Label>The Journey (Your Story)</Label>
+                <Textarea
+                  value={coachProfile.journey}
+                  onChange={(e) => setCoachProfile({ ...coachProfile, journey: e.target.value })}
+                  placeholder="Write your full professional story here... Share your journey, experiences, and what drives you."
+                  className="bg-black/40 border-white/20 min-h-[150px]"
+                />
+                <p className="text-xs text-white/40">Use Enter for line breaks. This appears in the bio modal.</p>
+              </div>
+
+              {/* Core Values */}
+              <div className="space-y-4">
+                <Label className="flex items-center gap-2 text-white/70">
+                  <Award className="w-4 h-4 text-orange-500" /> Core Values
+                </Label>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* Value 1 */}
+                  <div className="bg-black/30 border border-white/5 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Target className="w-4 h-4 text-orange-500" />
+                      <span className="text-xs text-white/50 uppercase tracking-wider">Value 1</span>
+                    </div>
+                    <Input
+                      value={coachProfile.value1_title}
+                      onChange={(e) => setCoachProfile({ ...coachProfile, value1_title: e.target.value })}
+                      placeholder="Results-Driven"
+                      className="bg-black/40 border-white/20"
+                    />
+                    <Input
+                      value={coachProfile.value1_desc}
+                      onChange={(e) => setCoachProfile({ ...coachProfile, value1_desc: e.target.value })}
+                      placeholder="Every program is designed with your specific goals in mind."
+                      className="bg-black/40 border-white/20 text-sm"
+                    />
+                  </div>
+
+                  {/* Value 2 */}
+                  <div className="bg-black/30 border border-white/5 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Heart className="w-4 h-4 text-pink-500" />
+                      <span className="text-xs text-white/50 uppercase tracking-wider">Value 2</span>
+                    </div>
+                    <Input
+                      value={coachProfile.value2_title}
+                      onChange={(e) => setCoachProfile({ ...coachProfile, value2_title: e.target.value })}
+                      placeholder="Client-Focused"
+                      className="bg-black/40 border-white/20"
+                    />
+                    <Input
+                      value={coachProfile.value2_desc}
+                      onChange={(e) => setCoachProfile({ ...coachProfile, value2_desc: e.target.value })}
+                      placeholder="Your success and wellbeing are my top priorities."
+                      className="bg-black/40 border-white/20 text-sm"
+                    />
+                  </div>
+
+                  {/* Value 3 */}
+                  <div className="bg-black/30 border border-white/5 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-yellow-500" />
+                      <span className="text-xs text-white/50 uppercase tracking-wider">Value 3</span>
+                    </div>
+                    <Input
+                      value={coachProfile.value3_title}
+                      onChange={(e) => setCoachProfile({ ...coachProfile, value3_title: e.target.value })}
+                      placeholder="Science-Based"
+                      className="bg-black/40 border-white/20"
+                    />
+                    <Input
+                      value={coachProfile.value3_desc}
+                      onChange={(e) => setCoachProfile({ ...coachProfile, value3_desc: e.target.value })}
+                      placeholder="Evidence-based training methods for optimal results."
+                      className="bg-black/40 border-white/20 text-sm"
+                    />
+                  </div>
+
+                  {/* Value 4 */}
+                  <div className="bg-black/30 border border-white/5 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Award className="w-4 h-4 text-green-500" />
+                      <span className="text-xs text-white/50 uppercase tracking-wider">Value 4</span>
+                    </div>
+                    <Input
+                      value={coachProfile.value4_title}
+                      onChange={(e) => setCoachProfile({ ...coachProfile, value4_title: e.target.value })}
+                      placeholder="Certified Expert"
+                      className="bg-black/40 border-white/20"
+                    />
+                    <Input
+                      value={coachProfile.value4_desc}
+                      onChange={(e) => setCoachProfile({ ...coachProfile, value4_desc: e.target.value })}
+                      placeholder="Fully certified with ongoing education in fitness science."
+                      className="bg-black/40 border-white/20 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handleSaveCoachProfile}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white"
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save Profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* --- CARD: CERTIFICATES MANAGEMENT --- */}
+          <Card className="bg-zinc-900 border-white/10 text-white">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/10 rounded-lg">
+                  <Award className="w-5 h-5 text-yellow-500" />
+                </div>
+                <div>
+                  <CardTitle>Certificates & Credentials</CardTitle>
+                  <CardDescription className="text-white/50">
+                    Add certifications displayed in the coach bio modal.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Add New Certificate */}
+              <div className="bg-black/30 border border-white/5 rounded-xl p-4 space-y-3">
+                <Label className="text-xs uppercase tracking-wider text-white/50">Add New Certificate</Label>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <Input
+                    value={newCert.name}
+                    onChange={(e) => setNewCert({ ...newCert, name: e.target.value })}
+                    placeholder="Certificate Name (e.g., NASM CPT)"
+                    className="bg-black/40 border-white/20"
+                  />
+                  <Input
+                    value={newCert.issuer}
+                    onChange={(e) => setNewCert({ ...newCert, issuer: e.target.value })}
+                    placeholder="Issuing Organization"
+                    className="bg-black/40 border-white/20"
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    if (newCert.name && newCert.issuer) {
+                      addCertificate(newCert);
+                      setNewCert({ name: '', issuer: '' });
+                      toast.success("Certificate added!");
+                    } else {
+                      toast.error("Please fill in both fields");
+                    }
+                  }}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
+                >
+                  <Award className="w-4 h-4 mr-2" /> Add Certificate
+                </Button>
+              </div>
+
+              {/* Existing Certificates List */}
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider text-white/50">
+                  Current Certificates ({certificates?.length || 0})
+                </Label>
+                {certificates && certificates.length > 0 ? (
+                  <div className="grid gap-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                    {certificates.map((cert) => (
+                      <div key={cert.id} className="flex items-center justify-between bg-black/40 border border-white/5 p-3 rounded-lg group hover:border-yellow-500/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-yellow-500/10 p-2 rounded-lg">
+                            <FileCheck className="w-4 h-4 text-yellow-500" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-white text-sm">{cert.name}</div>
+                            <div className="text-[10px] text-white/40 uppercase tracking-wider">{cert.issuer}</div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            deleteCertificate(cert.id);
+                            toast.info("Certificate deleted");
+                          }}
+                          className="text-white/20 hover:text-red-500 hover:bg-red-500/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-white/30 italic text-sm text-center py-4">No certificates added yet.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+
           <Card className="bg-zinc-900 border-white/10 text-white">
             <CardHeader>
               <div className="flex items-center gap-3">
