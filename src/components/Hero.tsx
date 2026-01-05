@@ -2,11 +2,13 @@ import { ArrowRight, Play, Camera } from 'lucide-react'; // Tambah icon Camera
 import { Editable } from './editor/Editable';
 import { useContent } from '../context/ContentContext'; // Tambah ini
 import { useRef } from 'react'; // Tambah ini
+import { useNavigate } from 'react-router-dom';
 
 export function Hero() {
   // Ambil state dan fungsi dari context
   const { images, updateImage, isEditMode } = useContent();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const handleImageClick = () => {
     if (isEditMode) {
@@ -79,7 +81,10 @@ export function Hero() {
               <Editable id="hero.cta_primary" as="span" defaultText="Start Your Journey" />
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full transition-colors flex items-center justify-center gap-2 border border-white/20 font-medium">
+            <button
+              onClick={() => navigate('/intro')}
+              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full transition-colors flex items-center justify-center gap-2 border border-white/20 font-medium"
+            >
               <Play className="w-5 h-5" />
               <Editable id="hero.cta_secondary" as="span" defaultText="Watch Video" />
             </button>

@@ -7,13 +7,13 @@ export type FAQItem = { id: string; question: string; answer: string; };
 export type LeaderboardItem = { id: string; name: string; steps: number; };
 export type MessageItem = { id: string; firstName: string; lastName: string; email: string; phone: string; goal: string; message: string; date: string; isRead: boolean; };
 export type CertificateItem = { id: string; name: string; issuer: string; };
-export type TestimonialItem = { 
-  id: string; 
-  name: string; 
-  role: string; 
-  image: string; 
-  rating: number; 
-  text: string; 
+export type TestimonialItem = {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  rating: number;
+  text: string;
   isActive: boolean | number; // ✅ Terima boolean atau number dari database
   is_active?: boolean | number; // ✅ Alias untuk backward compatibility
 };
@@ -61,6 +61,9 @@ const defaultContent: Record<string, string> = {
   "quote.text": "The only bad workout is the one that didn't happen.",
   "quote.font": '"Playfair Display", serif',
   "quote.author": "— COACH FITCOACH",
+  "intro.video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+  "intro.title": "Welcome to My Fitness Journey",
+  "intro.description": "Watch this introduction to learn more about my coaching philosophy and how I can help you transform your life."
 };
 
 const defaultServices: ServiceItem[] = [
@@ -194,32 +197,32 @@ const defaultLeaderboard: LeaderboardItem[] = [
 
 // --- CONTEXT INTERFACE ---
 interface ContentContextType {
-  content: Record<string, string>; 
+  content: Record<string, string>;
   updateContent: (key: string, value: string) => void;
-  services: ServiceItem[]; 
-  addService: (data: any) => void; 
-  updateService: (id: string, data: any) => void; 
+  services: ServiceItem[];
+  addService: (data: any) => void;
+  updateService: (id: string, data: any) => void;
   deleteService: (id: string) => void;
-  pricing: PricingItem[]; 
-  addPricing: (data: any) => void; 
-  updatePricing: (id: string, data: any) => void; 
+  pricing: PricingItem[];
+  addPricing: (data: any) => void;
+  updatePricing: (id: string, data: any) => void;
   deletePricing: (id: string) => void;
-  faqs: FAQItem[]; 
-  addFAQ: (data: any) => void; 
-  updateFAQ: (id: string, data: any) => void; 
+  faqs: FAQItem[];
+  addFAQ: (data: any) => void;
+  updateFAQ: (id: string, data: any) => void;
   deleteFAQ: (id: string) => void;
-  leaderboard: LeaderboardItem[]; 
-  addLeaderboardEntry: (data: any) => void; 
-  updateLeaderboardEntry: (id: string, data: any) => void; 
+  leaderboard: LeaderboardItem[];
+  addLeaderboardEntry: (data: any) => void;
+  updateLeaderboardEntry: (id: string, data: any) => void;
   deleteLeaderboardEntry: (id: string) => void;
-  messages: MessageItem[]; 
-  deleteMessage: (id: string) => void; 
+  messages: MessageItem[];
+  deleteMessage: (id: string) => void;
   markMessageAsRead: (id: string) => void;
   addMessage: (data: any) => void;
-  images: Record<string, string>; 
+  images: Record<string, string>;
   updateImage: (id: string, file: File) => void;
   deleteImage: (id: string) => void;
-  isEditMode: boolean; 
+  isEditMode: boolean;
   setEditMode: (value: boolean) => void;
   resetContent: () => void;
   certificates: CertificateItem[];
@@ -245,38 +248,38 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [isEditMode, setEditMode] = useState(false);
   const [certificates, setCertificates] = useState<CertificateItem[]>([]);
   const [faqs, setFaqs] = useState<FAQItem[]>(defaultFaqs);
-  const [testimonials, setTestimonials] = useState<TestimonialItem[]>(defaultTestimonials); 
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>(defaultTestimonials);
   const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>(defaultLeaderboard);
 
   // ✅ Helper untuk API calls
   const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => {
-  try {
-    const token = localStorage.getItem('token'); // ✅ Ambil token
+    try {
+      const token = localStorage.getItem('token'); // ✅ Ambil token
 
-    const options: RequestInit = {
-      method,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json', // Tambahkan ini
-        ...(token && { 'Authorization': `Bearer ${token}` }) // ✅ Kirim token jika ada
-      },
-    };
-    
-    if (data) options.body = JSON.stringify(data);
-    
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      const options: RequestInit = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json', // Tambahkan ini
+          ...(token && { 'Authorization': `Bearer ${token}` }) // ✅ Kirim token jika ada
+        },
+      };
+
+      if (data) options.body = JSON.stringify(data);
+
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`❌ API Error [${method} ${endpoint}]:`, error);
+      throw error;
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`❌ API Error [${method} ${endpoint}]:`, error);
-    throw error;
-  }
-};
+  };
 
   // ✅ Load data dari MySQL saat inisialisasi
   useEffect(() => {
@@ -559,7 +562,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setTestimonials(defaultTestimonials);
     setFaqs(defaultFaqs);
     setLeaderboard(defaultLeaderboard);
-    
+
     try {
       await apiCall('/reset', 'POST');
     } catch (error) {
@@ -568,10 +571,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ContentContext.Provider value={{ 
-      content, updateContent, 
+    <ContentContext.Provider value={{
+      content, updateContent,
       services, addService, updateService, deleteService,
-      pricing, addPricing, updatePricing, deletePricing, 
+      pricing, addPricing, updatePricing, deletePricing,
       faqs, addFAQ, updateFAQ, deleteFAQ,
       leaderboard, addLeaderboardEntry, updateLeaderboardEntry, deleteLeaderboardEntry,
       messages, deleteMessage, markMessageAsRead, addMessage,
@@ -579,7 +582,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       isEditMode, setEditMode,
       resetContent,
       certificates, addCertificate, deleteCertificate,
-      testimonials, addTestimonial, updateTestimonial, deleteTestimonial 
+      testimonials, addTestimonial, updateTestimonial, deleteTestimonial
     }}>
       {children}
     </ContentContext.Provider>

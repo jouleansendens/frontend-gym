@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 // Public Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
+import IntroVideo from './pages/IntroVideo';
 import LandingPageEditor from './pages/LandingPageEditor';
 
 // Admin Pages
@@ -19,7 +20,7 @@ import ManageTestimonials from './pages/admin/ManageTestimonials';
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   // ✅ TUNGGU hingga verifikasi selesai sebelum melakukan keputusan redirect
   if (isLoading) {
     return (
@@ -28,11 +29,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return <>{children}</>;
 }
 
@@ -42,88 +43,89 @@ export default function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/intro" element={<IntroVideo />} />
         <Route path="/login" element={<Login />} />
-        
+
         {/* Protected Admin Routes */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <ProtectedRoute>
               <AdminDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/admin/editor" 
+
+        <Route
+          path="/admin/editor"
           element={
             <ProtectedRoute>
               <LandingPageEditor />
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/admin/services" 
+
+        <Route
+          path="/admin/services"
           element={
             <ProtectedRoute>
               <ManageServices />
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/admin/pricing" 
+
+        <Route
+          path="/admin/pricing"
           element={
             <ProtectedRoute>
               <ManagePricing />
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/admin/leaderboard" 
+
+        <Route
+          path="/admin/leaderboard"
           element={
             <ProtectedRoute>
               <ManageLeaderboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/admin/faq" 
+
+        <Route
+          path="/admin/faq"
           element={
             <ProtectedRoute>
               <ManageFAQ />
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/admin/messages" 
+
+        <Route
+          path="/admin/messages"
           element={
             <ProtectedRoute>
               <ManageMessages />
             </ProtectedRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/admin/settings" 
+
+        <Route
+          path="/admin/settings"
           element={
             <ProtectedRoute>
               <Settings />
             </ProtectedRoute>
-          } 
+          }
         />
 
-        <Route 
-          path="/admin/testimonials" 
+        <Route
+          path="/admin/testimonials"
           element={
             <ProtectedRoute>
               <ManageTestimonials />
             </ProtectedRoute>
-          } 
+          }
         />
 
         {/* 404 Not Found */}
