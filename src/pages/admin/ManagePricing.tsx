@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useContent, PricingItem } from '../../context/ContentContext';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { Card, CardContent } from '../../components/ui/card';
@@ -27,6 +27,25 @@ export default function ManagePricing() {
     popular: false
   });
 
+  // ✅ Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(pricing.length / itemsPerPage);
+  const paginatedPricing = pricing.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // 🔍 Monitor dialog state
+  useEffect(() => {
+    console.log('📊 Dialog State Changed:', isDialogOpen);
+    if (isDialogOpen) {
+      console.log('✅ Dialog SHOULD be visible now');
+      console.log('EditingItem:', editingItem);
+      console.log('FormData:', formData);
+    }
+  }, [isDialogOpen, editingItem, formData]);
+
   const handleOpenAdd = () => {
     setEditingItem(null);
     setFormData({ name: '', price: '', period: 'per month', description: '', featuresText: '', popular: false });
@@ -34,21 +53,43 @@ export default function ManagePricing() {
   };
 
   const handleOpenEdit = (item: PricingItem) => {
-    setEditingItem(item);
-    setFormData({
-      name: item.name,
-      price: item.price,
-      period: item.period,
-      description: item.description,
-      featuresText: item.features.join('\n'),
-      popular: item.popular
-    });
-    setIsDialogOpen(true);
+    console.log('🔥 EDIT BUTTON CLICKED!');
+    console.log('Pricing data:', item);
+
+    try {
+      // ✅ Parse features - backend returns JSON string
+      let featuresArray: string[] = [];
+      if (typeof item.features === 'string') {
+        try {
+          featuresArray = JSON.parse(item.features);
+        } catch (e) {
+          console.error('Failed to parse features:', e);
+          featuresArray = [];
+        }
+      } else if (Array.isArray(item.features)) {
+        featuresArray = item.features;
+      }
+
+      setEditingItem(item);
+      setFormData({
+        name: item.name || '',
+        price: item.price || '',
+        period: item.period || 'per month',
+        description: item.description || '',
+        featuresText: featuresArray.join('\n'),
+        popular: item.popular || false
+      });
+      setIsDialogOpen(true);
+      console.log('✅ Dialog opened successfully');
+    } catch (error) {
+      console.error('❌ Error opening edit dialog:', error);
+      alert('Error loading pricing data. Check console.');
+    }
   };
 
   const handleSubmit = () => {
     const featuresArray = formData.featuresText.split('\n').filter(line => line.trim() !== '');
-    
+
     if (editingItem) {
       updatePricing(editingItem.id, {
         ...formData,
@@ -107,11 +148,11 @@ export default function ManagePricing() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pricing.map((item) => (
+                {paginatedPricing.map((item) => (
                   <TableRow key={item.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-orange-500 font-bold">
-                        {formatRupiah(item.price)}
+                      {formatRupiah(item.price)}
                     </TableCell>
                     <TableCell className="text-white/60 hidden md:table-cell truncate max-w-xs">
                       {item.description}
@@ -121,7 +162,16 @@ export default function ManagePricing() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(item)} className="hover:bg-white/10 text-white/80">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            handleOpenEdit(item);
+                          }}
+                          className="hover:bg-white/10 text-white/80 cursor-pointer"
+                        >
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="hover:bg-red-500/20 text-red-400">
@@ -136,21 +186,62 @@ export default function ManagePricing() {
           </CardContent>
         </Card>
 
+        {/* ✅ PAGINATION - Premium Design */}
+        {totalPages > 1 && (
+          <div className="flex flex-col items-center gap-4 mt-6 pt-6 border-t border-white/10">
+            <p className="text-white/40 text-xs uppercase tracking-widest">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, pricing.length)} of {pricing.length} plans
+            </p>
+            <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${currentPage === 1 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                Prev
+              </button>
+              <div className="flex items-center gap-1 px-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-all ${currentPage === page ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'text-white/40 hover:bg-white/10 hover:text-white'
+                      }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${currentPage === totalPages ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
+              >
+                Next
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Dialog Form */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>{editingItem ? 'Edit Plan' : 'Add New Plan'}</DialogTitle>
             </DialogHeader>
-            
+
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <label className="text-sm font-medium text-white/70">Plan Name</label>
-                  <Input 
+                  <Input
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="bg-black/40 border-white/20" 
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="bg-black/40 border-white/20"
                     placeholder="Basic Plan"
                   />
                 </div>
@@ -158,10 +249,10 @@ export default function ManagePricing() {
                   <label className="text-sm font-medium text-white/70">Price (Rp)</label>
                   <div className="relative">
                     <Banknote className="absolute left-3 top-2.5 h-4 w-4 text-white/40" />
-                    <Input 
+                    <Input
                       value={formData.price}
-                      onChange={(e) => setFormData({...formData, price: e.target.value})}
-                      className="bg-black/40 border-white/20 pl-9" 
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      className="bg-black/40 border-white/20 pl-9"
                       placeholder="500000"
                       type="number"
                     />
@@ -171,39 +262,39 @@ export default function ManagePricing() {
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-white/70">Period</label>
-                <Input 
+                <Input
                   value={formData.period}
-                  onChange={(e) => setFormData({...formData, period: e.target.value})}
-                  className="bg-black/40 border-white/20" 
+                  onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                  className="bg-black/40 border-white/20"
                   placeholder="per month"
                 />
               </div>
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-white/70">Short Description</label>
-                <Textarea 
+                <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="bg-black/40 border-white/20" 
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="bg-black/40 border-white/20"
                   placeholder="A short description of this plan..."
                 />
               </div>
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-white/70">Features (One per line)</label>
-                <Textarea 
+                <Textarea
                   value={formData.featuresText}
-                  onChange={(e) => setFormData({...formData, featuresText: e.target.value})}
-                  className="bg-black/40 border-white/20 min-h-[100px]" 
+                  onChange={(e) => setFormData({ ...formData, featuresText: e.target.value })}
+                  className="bg-black/40 border-white/20 min-h-[100px]"
                   placeholder="24/7 Gym Access&#10;Free Towels&#10;Private Locker"
                 />
               </div>
 
               <div className="flex items-center space-x-2 bg-black/20 p-3 rounded-lg border border-white/10">
-                <Switch 
-                  id="popular-mode" 
+                <Switch
+                  id="popular-mode"
                   checked={formData.popular}
-                  onCheckedChange={(checked) => setFormData({...formData, popular: checked})}
+                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, popular: checked })}
                 />
                 <Label htmlFor="popular-mode" className="text-white cursor-pointer">Set as "Most Popular" plan</Label>
               </div>

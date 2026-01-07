@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Plus, Pencil, Trash2, Trophy } from 'lucide-react';
+import { Plus, Pencil, Trash2, Trophy, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ManageLeaderboard() {
@@ -16,12 +16,13 @@ export default function ManageLeaderboard() {
 
   const [formData, setFormData] = useState({
     name: '',
-    steps: ''
+    steps: '',
+    image: ''
   });
 
   const handleOpenAdd = () => {
     setEditingItem(null);
-    setFormData({ name: '', steps: '' });
+    setFormData({ name: '', steps: '', image: '' });
     setIsDialogOpen(true);
   };
 
@@ -29,9 +30,21 @@ export default function ManageLeaderboard() {
     setEditingItem(item);
     setFormData({
       name: item.name,
-      steps: item.steps.toString()
+      steps: item.steps.toString(),
+      image: item.image || ''
     });
     setIsDialogOpen(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, image: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = () => {
@@ -40,7 +53,7 @@ export default function ManageLeaderboard() {
       return;
     }
 
-    const stepsNumber = parseInt(formData.steps.replace(/,/g, ''), 10); // Hapus koma jika ada
+    const stepsNumber = parseInt(formData.steps.replace(/,/g, ''), 10);
 
     if (isNaN(stepsNumber)) {
       toast.error("Steps must be a number");
@@ -48,10 +61,18 @@ export default function ManageLeaderboard() {
     }
 
     if (editingItem) {
-      updateLeaderboardEntry(editingItem.id, { name: formData.name, steps: stepsNumber });
+      updateLeaderboardEntry(editingItem.id, {
+        name: formData.name,
+        steps: stepsNumber,
+        image: formData.image
+      });
       toast.success("Entry updated!");
     } else {
-      addLeaderboardEntry({ name: formData.name, steps: stepsNumber });
+      addLeaderboardEntry({
+        name: formData.name,
+        steps: stepsNumber,
+        image: formData.image
+      });
       toast.success("New entry added!");
     }
     setIsDialogOpen(false);
@@ -100,7 +121,22 @@ export default function ManageLeaderboard() {
                       {index === 2 && <span className="text-orange-700">🥉</span>}
                       {index > 2 && <span className="text-white/50">#{index + 1}</span>}
                     </TableCell>
-                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold border-2 ${index === 0 ? 'border-yellow-500' : 'border-white/10'
+                          }`}>
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className={`w-full h-full flex items-center justify-center ${index === 0 ? 'bg-yellow-500 text-black' : 'bg-zinc-800 text-white/70'
+                              }`}>
+                              {item.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-medium">{item.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right font-mono text-orange-400">
                       {item.steps.toLocaleString()}
                     </TableCell>
@@ -137,22 +173,43 @@ export default function ManageLeaderboard() {
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
+              {/* Image Upload */}
+              <div className="flex flex-col items-center gap-3 pb-2">
+                <div className="w-20 h-20 rounded-full bg-black border-2 border-dashed border-white/10 overflow-hidden relative group transition-all hover:border-orange-500/50 cursor-pointer">
+                  {formData.image ? (
+                    <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-white/20 gap-1">
+                      <ImageIcon className="w-6 h-6" />
+                      <span className="text-[8px] uppercase font-bold">Photo</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    onChange={handleImageUpload}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    accept="image/*"
+                  />
+                </div>
+                <p className="text-xs text-white/40">Click to upload participant photo (Optional)</p>
+              </div>
+
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Client Name</label>
-                <Input 
+                <Input
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="bg-black/40 border-white/20" 
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="bg-black/40 border-white/20"
                   placeholder="e.g. Sarah J."
                 />
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Weekly Steps</label>
-                <Input 
+                <Input
                   type="number"
                   value={formData.steps}
-                  onChange={(e) => setFormData({...formData, steps: e.target.value})}
-                  className="bg-black/40 border-white/20" 
+                  onChange={(e) => setFormData({ ...formData, steps: e.target.value })}
+                  className="bg-black/40 border-white/20"
                   placeholder="e.g. 75000"
                 />
               </div>

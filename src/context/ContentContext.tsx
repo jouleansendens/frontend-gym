@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 export type ServiceItem = { id: string; title: string; description: string; iconName: string; features: string[]; };
 export type PricingItem = { id: string; name: string; price: string; period: string; description: string; features: string[]; popular: boolean; };
 export type FAQItem = { id: string; question: string; answer: string; };
-export type LeaderboardItem = { id: string; name: string; steps: number; };
+export type LeaderboardItem = { id: string; name: string; steps: number; image?: string; };
 export type MessageItem = { id: string; firstName: string; lastName: string; email: string; phone: string; goal: string; message: string; date: string; isRead: boolean; };
 export type CertificateItem = { id: string; name: string; issuer: string; featured: boolean; };
 export type TestimonialItem = {
@@ -91,7 +91,9 @@ const defaultContent: Record<string, string> = {
   "quote.author": "— COACH FITCOACH",
   "intro.video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
   "intro.title": "Welcome to My Fitness Journey",
-  "intro.description": "Watch this introduction to learn more about my coaching philosophy and how I can help you transform your life."
+  "intro.description": "Watch this introduction to learn more about my coaching philosophy and how I can help you transform your life.",
+  "contact_info_visibility": "1", // ✅ Default VISIBLE (Address info)
+  "contact_form_visibility": "1"  // ✅ Default VISIBLE (Message inputs)
 };
 
 const defaultServices: ServiceItem[] = [
@@ -427,12 +429,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   // --- CONTENT MANAGEMENT ---
   const updateContent = async (key: string, value: string) => {
-    const newContent = { ...content, [key]: value };
-    setContent(newContent);
+    // ✅ Functional update to prevent race conditions when multiple updates happen rapidly
+    setContent(prev => ({ ...prev, [key]: value }));
     try {
       await apiCall('/content', 'PUT', { key, value });
     } catch (error) {
       console.error('Failed to update content:', error);
+      // Re-throw so the caller (Settings.tsx) knows it failed
+      throw error;
     }
   };
 

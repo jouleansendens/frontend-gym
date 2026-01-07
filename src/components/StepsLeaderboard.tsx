@@ -23,7 +23,7 @@ export function StepsLeaderboard() {
             Weekly Steps Champions
           </h2>
           <p className="text-white/60 max-w-2xl mx-auto">
-            Our clients are crushing their goals! Here are the top movers this week. 
+            Our clients are crushing their goals! Here are the top movers this week.
             Join the program to get on the board.
           </p>
         </div>
@@ -72,10 +72,16 @@ export function StepsLeaderboard() {
 
                       {/* Name Column */}
                       <div className="col-span-6 flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                          index === 0 ? 'bg-yellow-500 text-black' : 'bg-zinc-800 text-white/70'
-                        }`}>
-                          {item.name.charAt(0)}
+                        <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold border-2 ${index === 0 ? 'border-yellow-500' : 'border-white/10'
+                          }`}>
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className={`w-full h-full flex items-center justify-center ${index === 0 ? 'bg-yellow-500 text-black' : 'bg-zinc-800 text-white/70'
+                              }`}>
+                              {item.name.charAt(0)}
+                            </div>
+                          )}
                         </div>
                         <span className={`font-medium text-lg ${index === 0 ? 'text-white' : 'text-white/80'}`}>
                           {item.name}
@@ -95,7 +101,7 @@ export function StepsLeaderboard() {
                 })
               )}
             </div>
-            
+
             {/* Footer */}
             <div className="p-6 bg-white/5 text-center border-t border-white/5">
               <p className="text-white/40 text-sm">Last updated: Every Sunday Night</p>

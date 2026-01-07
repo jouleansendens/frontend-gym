@@ -3,20 +3,28 @@ import { useContent } from '../context/ContentContext';
 
 export function Testimonials() {
   const { testimonials, content } = useContent();
-  
+
   // Ambil pengaturan jumlah dari admin, default 3
   const displayCount = parseInt(content["testimonial.display_count"] || "3");
 
-  // ✅ Perbaikan: Cek is_active (sesuai SQL) atau isActive
+  // ✅ Debug: Log semua testimonials untuk cek struktur data
+  console.log('All testimonials from DB:', testimonials);
+
+  // ✅ Filter hanya testimonial yang VISIBLE (is_active = 1 atau true)
   const activeTestimonials = testimonials
     .filter(t => {
-      // Cek berbagai format boolean dari database
-      return t.isActive === true || 
-             t.isActive === 1 || 
-             t.is_active === true || 
-             t.is_active === 1;
+      // Backend mungkin kirim is_active sebagai 0/1, true/false, atau "0"/"1"
+      const isActive = t.is_active ?? t.isActive;
+
+      // Convert to string untuk comparison yang konsisten
+      const activeStr = String(isActive);
+
+      // Only show if is_active = 1 or true
+      return activeStr === "1" || activeStr === "true";
     })
     .slice(0, displayCount);
+
+  console.log('Active testimonials after filter:', activeTestimonials);
 
   // Jika tidak ada testimonial aktif, jangan render section ini sama sekali
   if (activeTestimonials.length === 0) {
@@ -44,10 +52,10 @@ export function Testimonials() {
               <p className="text-white/80 mb-6 italic leading-relaxed">"{t.text}"</p>
               <div className="flex items-center gap-4">
                 {/* Fallback image jika image dari DB kosong */}
-                <img 
-                  src={t.image && t.image.startsWith('http') ? t.image : 'https://via.placeholder.com/150'} 
-                  alt={t.name} 
-                  className="w-12 h-12 rounded-full object-cover" 
+                <img
+                  src={t.image && t.image.startsWith('http') ? t.image : 'https://via.placeholder.com/150'}
+                  alt={t.name}
+                  className="w-12 h-12 rounded-full object-cover"
                 />
                 <div>
                   <div className="text-white font-bold">{t.name}</div>

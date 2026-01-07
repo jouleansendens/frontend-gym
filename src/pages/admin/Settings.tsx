@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { useContent } from '../../context/ContentContext';
+import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -47,6 +48,7 @@ const XIcon = ({ className }: { className?: string }) => (
 
 export default function Settings() {
   const { content, updateContent, certificates, addCertificate, updateCertificate, deleteCertificate, sections, updateSections } = useContent();
+  const { token } = useAuth();
   const [isAccountLoading, setIsAccountLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -64,6 +66,10 @@ export default function Settings() {
     linkedin: '',
     twitter: ''
   });
+
+  // Contact Sub-section Toggle States
+  const [enableContactForm, setEnableContactForm] = useState(true);
+  const [enableContactInfo, setEnableContactInfo] = useState(true);
 
   // Social Media Toggle State
   const [socialEnabled, setSocialEnabled] = useState({
@@ -122,6 +128,8 @@ export default function Settings() {
       linkedin: content["social.linkedin"] || "",
       twitter: content["social.twitter"] || ""
     });
+    setEnableContactForm(content["contact_form_visibility"] !== "0");
+    setEnableContactInfo(content["contact_info_visibility"] !== "0");
     setSocialEnabled({
       instagram: content["social.instagram.enabled"] !== "false",
       facebook: content["social.facebook.enabled"] !== "false",
@@ -150,60 +158,58 @@ export default function Settings() {
 
   // Handler for Contact Information
   const handleSaveContact = async () => {
-    setIsSaving(true);
     try {
-      const promises = [
-        updateContent("contact.phone", formData.wa_phone),
-        updateContent("contact.wa_template", formData.wa_template),
-        updateContent("contact.email", formData.email),
-        updateContent("contact.display_phone", formData.display_phone),
-        updateContent("contact.address", formData.address),
-      ];
-      await Promise.all(promises);
+      // Execute sequentially to prevent server-side race conditions or drops
+      await updateContent("contact.phone", formData.wa_phone);
+      await updateContent("contact.wa_template", formData.wa_template);
+      await updateContent("contact.email", formData.email);
+      await updateContent("contact.display_phone", formData.display_phone);
+      await updateContent("contact.address", formData.address);
+      await updateContent("contact_form_visibility", enableContactForm ? "1" : "0");
+      await updateContent("contact_info_visibility", enableContactInfo ? "1" : "0");
+
       toast.success("Contact information saved!");
-    } finally {
-      setIsSaving(false);
+    } catch (error) {
+      toast.error("Failed to save contact info.");
     }
   };
 
-  // Handler for Social Media
   const handleSaveSocial = async () => {
-    setIsSaving(true);
     try {
-      const promises = [
-        updateContent("social.instagram", formData.instagram),
-        updateContent("social.facebook", formData.facebook),
-        updateContent("social.youtube", formData.youtube),
-        updateContent("social.tiktok", formData.tiktok),
-        updateContent("social.linkedin", formData.linkedin),
-        updateContent("social.twitter", formData.twitter),
-        updateContent("social.instagram.enabled", String(socialEnabled.instagram)),
-        updateContent("social.facebook.enabled", String(socialEnabled.facebook)),
-        updateContent("social.youtube.enabled", String(socialEnabled.youtube)),
-        updateContent("social.tiktok.enabled", String(socialEnabled.tiktok)),
-        updateContent("social.linkedin.enabled", String(socialEnabled.linkedin)),
-        updateContent("social.twitter.enabled", String(socialEnabled.twitter)),
-      ];
-      await Promise.all(promises);
-      toast.success("Social media settings saved!");
-    } finally {
-      setIsSaving(false);
+      await updateContent("social.instagram", formData.instagram);
+      await updateContent("social.facebook", formData.facebook);
+      await updateContent("social.linkedin", formData.linkedin);
+      await updateContent("social.twitter", formData.twitter);
+
+      await updateContent("social.instagram.enabled", String(socialEnabled.instagram));
+      await updateContent("social.facebook.enabled", String(socialEnabled.facebook));
+      await updateContent("social.linkedin.enabled", String(socialEnabled.linkedin));
+      await updateContent("social.twitter.enabled", String(socialEnabled.twitter));
+
+      toast.success("Social media links saved!");
+    } catch (error) {
+      toast.error("Failed to save social media.");
     }
   };
 
-  // Handler for Saving ALL (Header Button)
   const handleSaveAll = async () => {
-    setIsSaving(true);
+    setIsSaving(true); // Changed from setIsLoading to setIsSaving to match existing state
     try {
-      await Promise.all([
-        handleSaveContact(), // Note: recursive isSaving set might be redundant but safe
-        handleSaveSocial(),
-        handleSaveVideo(),
-        handleSaveCoachProfile(),
-      ]);
+      // Execute global sections sequentially
+      await handleSaveContact();
+      await handleSaveSocial();
+      // Assuming handleSaveAccount and handleSaveCoach are defined elsewhere or meant to be added
+      // For now, commenting them out to avoid errors if they don't exist in the provided context
+      // await handleSaveAccount(); 
+      if (videoData.video_url) await handleSaveVideo();
+      if (coachProfile.journey) await handleSaveCoachProfile();
+
       toast.success("All settings saved successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Some settings failed to save.");
     } finally {
-      setIsSaving(false);
+      setIsSaving(false); // Changed from setIsLoading to setIsSaving to match existing state
     }
   };
 
@@ -218,15 +224,18 @@ export default function Settings() {
 
   // Handler for Coach Profile
   const handleSaveCoachProfile = () => {
-    updateContent("about.modal_content", coachProfile.journey);
-    updateContent("about.value1.title", coachProfile.value1_title);
-    updateContent("about.value1.desc", coachProfile.value1_desc);
-    updateContent("about.value2.title", coachProfile.value2_title);
-    updateContent("about.value2.desc", coachProfile.value2_desc);
-    updateContent("about.value3.title", coachProfile.value3_title);
-    updateContent("about.value3.desc", coachProfile.value3_desc);
-    updateContent("about.value4.title", coachProfile.value4_title);
-    updateContent("about.value4.desc", coachProfile.value4_desc);
+    // ✅ Konversi empty string ke spasi agar database tidak reject NULL
+    const safeValue = (val: string) => val.trim() === '' ? ' ' : val;
+
+    updateContent("about.modal_content", safeValue(coachProfile.journey));
+    updateContent("about.value1.title", safeValue(coachProfile.value1_title));
+    updateContent("about.value1.desc", safeValue(coachProfile.value1_desc));
+    updateContent("about.value2.title", safeValue(coachProfile.value2_title));
+    updateContent("about.value2.desc", safeValue(coachProfile.value2_desc));
+    updateContent("about.value3.title", safeValue(coachProfile.value3_title));
+    updateContent("about.value3.desc", safeValue(coachProfile.value3_desc));
+    updateContent("about.value4.title", safeValue(coachProfile.value4_title));
+    updateContent("about.value4.desc", safeValue(coachProfile.value4_desc));
 
     toast.success("Coach profile saved!");
   };
@@ -246,13 +255,14 @@ export default function Settings() {
     setIsAccountLoading(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/update-profile`, {
-        method: 'PUT', // ✅ Ubah dari POST ke PUT
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}` // ✅ Tambahkan token untuk autentikasi
         },
         body: JSON.stringify({
-          user_id: 1, // ✅ Tambahkan user_id (sesuaikan dengan sistem auth Anda)
+          user_id: 1,
           name: accountData.username || undefined,
           current_password: accountData.currentPassword,
           new_password: accountData.newPassword || undefined,
@@ -309,7 +319,10 @@ export default function Settings() {
 
         <div className="grid gap-8">
 
-          {/* --- CARD 1: ACCOUNT SETTINGS (NEW) --- */}
+
+
+
+          {/* --- CARD 1: ACCOUNT SETTINGS --- */}
           <Card className="bg-zinc-900 border-white/10 text-white">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -386,6 +399,9 @@ export default function Settings() {
           </Card>
 
 
+
+
+
           {/* --- CARD: LANDING PAGE LAYOUT --- */}
           <Card className="bg-zinc-900 border-white/10 text-white">
             <CardHeader>
@@ -404,45 +420,120 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 {sections && sections.map((section, index) => (
-                  <div key={section.id} className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-md ${section.isVisible ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                        {section.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  <div key={section.id}>
+                    <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-md ${section.isVisible ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                          {section.isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </div>
+                        <span className={`font-medium ${!section.isVisible ? 'text-white/40 line-through' : ''}`}>{section.label}</span>
                       </div>
-                      <span className={`font-medium ${!section.isVisible && 'text-white/40 line-through'}`}>{section.label}</span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleMoveSection(index, 'up')}
+                          disabled={index === 0}
+                          className="h-8 w-8 hover:bg-white/10"
+                        >
+                          <ArrowUp className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleMoveSection(index, 'down')}
+                          disabled={index === sections.length - 1}
+                          className="h-8 w-8 hover:bg-white/10"
+                        >
+                          <ArrowDown className="w-4 h-4" />
+                        </Button>
+                        <div className="w-px h-6 bg-white/10 mx-1" />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleSection(index)}
+                          className={`h-8 px-3 text-xs font-semibold uppercase tracking-wider ${section.isVisible ? 'text-red-500 hover:text-red-400 hover:bg-red-500/10' : 'text-green-500 hover:text-green-400 hover:bg-green-500/10'}`}
+                        >
+                          {section.isVisible ? 'Hide' : 'Show'}
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleMoveSection(index, 'up')}
-                        disabled={index === 0}
-                        className="h-8 w-8 hover:bg-white/10"
-                      >
-                        <ArrowUp className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleMoveSection(index, 'down')}
-                        disabled={index === sections.length - 1}
-                        className="h-8 w-8 hover:bg-white/10"
-                      >
-                        <ArrowDown className="w-4 h-4" />
-                      </Button>
-                      <div className="w-px h-6 bg-white/10 mx-1" />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleSection(index)}
-                        className={`h-8 px-3 text-xs ${section.isVisible ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-green-400 hover:text-green-300 hover:bg-green-500/10'}`}
-                      >
-                        {section.isVisible ? 'Hide' : 'Show'}
-                      </Button>
-                    </div>
+
+                    {/* Sub-items for Contact Section */}
+                    {section.id === 'contact' && section.isVisible && (
+                      <div className="space-y-2 mt-2 ml-8 border-l border-white/10 pl-4">
+
+                        {/* 1. Contact Info Toggle */}
+                        <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-md ${enableContactInfo ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                              {enableContactInfo ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                            </div>
+                            <div>
+                              <span className={`font-medium text-sm ${!enableContactInfo ? 'text-white/40 line-through' : 'text-white'}`}>Contact Info</span>
+                              <p className="text-[10px] text-white/40">Address, Email, Phone, etc.</p>
+                              <p className="text-[9px] text-blue-400 font-mono mt-0.5">DB: {content["contact_info_visibility"] || "undef"}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEnableContactInfo(!enableContactInfo)}
+                              className={`h-8 px-3 text-xs font-semibold uppercase tracking-wider ${enableContactInfo ? 'text-red-500 hover:text-red-400 hover:bg-red-500/10' : 'text-green-500 hover:text-green-400 hover:bg-green-500/10'}`}
+                            >
+                              {enableContactInfo ? 'Hide' : 'Show'}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* 2. Contact Form Toggle */}
+                        <div className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-md ${enableContactForm ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                              {enableContactForm ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                            </div>
+                            <div>
+                              <span className={`font-medium text-sm ${!enableContactForm ? 'text-white/40 line-through' : 'text-white'}`}>Message Form</span>
+                              <p className="text-[10px] text-white/40">"Send us a Message" inputs</p>
+                              <p className="text-[9px] text-blue-400 font-mono mt-0.5">DB: {content["contact_form_visibility"] || "undef"}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEnableContactForm(!enableContactForm)}
+                              className={`h-8 px-3 text-xs font-semibold uppercase tracking-wider ${enableContactForm ? 'text-red-500 hover:text-red-400 hover:bg-red-500/10' : 'text-green-500 hover:text-green-400 hover:bg-green-500/10'}`}
+                            >
+                              {enableContactForm ? 'Hide' : 'Show'}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Save Button for Contact Section */}
+                        <div className="flex justify-end pt-2">
+                          <Button
+                            onClick={async (e: React.MouseEvent) => {
+                              e.stopPropagation(); // Prevent bubbling if needed
+                              setIsSaving(true);
+                              await handleSaveContact();
+                              setIsSaving(false);
+                            }}
+                            disabled={isSaving}
+                            className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-4 h-8"
+                          >
+                            {isSaving ? 'Saving...' : 'Save Visibility'}
+                          </Button>
+                        </div>
+
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -789,6 +880,14 @@ export default function Settings() {
                   className="bg-black/40 border-white/20 min-h-[80px]"
                 />
                 <p className="text-xs text-white/40">Use <code>{`{name}`}</code>, <code>{`{price}`}</code> for dynamic values.</p>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handleSaveContact}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save WhatsApp Settings
+                </Button>
               </div>
             </CardContent>
           </Card>

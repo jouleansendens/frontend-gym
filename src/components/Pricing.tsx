@@ -75,18 +75,19 @@ export function Pricing() {
           </div>
         ) : (
           <div className="relative px-4 w-full max-w-[1200px] mx-auto">
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent className="-ml-6 pt-20 pb-10">
+            {/* If 3 or fewer plans, show static grid layout */}
+            {pricing.length <= 3 ? (
+              <div className={`flex flex-wrap gap-6 pt-20 pb-10 ${pricing.length === 1 ? 'justify-center' :
+                  pricing.length === 2 ? 'justify-center' :
+                    'justify-center'
+                }`}>
                 {pricing.map((plan) => (
-                  <CarouselItem
+                  <div
                     key={plan.id}
-                    className="pl-6 basis-full md:basis-1/2 lg:basis-1/3"
+                    className={`w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] ${pricing.length === 1 ? 'max-w-[380px]' :
+                        pricing.length === 2 ? 'max-w-[380px]' :
+                          ''
+                      }`}
                   >
                     <div className="h-full pt-2">
                       <div
@@ -114,7 +115,6 @@ export function Pricing() {
                             {plan.name}
                           </h3>
                           <div className="flex items-end justify-center gap-1 mb-3">
-                            {/* ✅ Updated Currency Symbol to Rp */}
                             <span className="text-white/40 text-lg mb-1.5 font-medium">Rp</span>
                             <span className="text-5xl font-extrabold tracking-tighter leading-none text-white">
                               {formatIDR(plan.price)}
@@ -156,16 +156,103 @@ export function Pricing() {
                         </button>
                       </div>
                     </div>
-                  </CarouselItem>
+                  </div>
                 ))}
-              </CarouselContent>
-
-              {/* Navigation Buttons */}
-              <div className="hidden md:block">
-                <CarouselPrevious className="-left-16 h-14 w-14 bg-zinc-900/50 border border-white/10 text-white/50 hover:text-white hover:bg-orange-500 hover:border-orange-500 transition-all backdrop-blur-md z-30" />
-                <CarouselNext className="-right-16 h-14 w-14 bg-zinc-900/50 border border-white/10 text-white/50 hover:text-white hover:bg-orange-500 hover:border-orange-500 transition-all backdrop-blur-md z-30" />
               </div>
-            </Carousel>
+            ) : (
+              /* More than 3 plans - use Carousel */
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+                className="w-full"
+              >
+                <CarouselContent className="-ml-6 pt-20 pb-10">
+                  {pricing.map((plan) => (
+                    <CarouselItem
+                      key={plan.id}
+                      className="pl-6 basis-full md:basis-1/2 lg:basis-1/3"
+                    >
+                      <div className="h-full pt-2">
+                        <div
+                          className={`h-full flex flex-col rounded-[2rem] p-8 relative transition-all duration-300 ${plan.popular
+                            ? 'bg-zinc-900 border border-orange-500/50 shadow-[0_0_50px_-10px_rgba(249,115,22,0.4)] scale-100'
+                            : 'bg-zinc-900/40 border border-white/5 hover:border-white/10 hover:bg-zinc-900/60 backdrop-blur-sm'
+                            }`}
+                        >
+                          {/* Most Popular Badge */}
+                          {plan.popular && (
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-max z-20">
+                              <div className="relative">
+                                <div className="absolute inset-0 bg-orange-500 blur-lg opacity-60 rounded-full scale-110"></div>
+                                <div className="relative bg-gradient-to-r from-orange-600 to-orange-500 text-white px-6 py-2 rounded-full text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 shadow-xl border border-orange-400/30">
+                                  <Sparkles className="w-3.5 h-3.5 fill-white" />
+                                  Most Popular
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Card Header */}
+                          <div className="text-center mb-8 pt-4">
+                            <h3 className={`text-2xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-white/90'}`}>
+                              {plan.name}
+                            </h3>
+                            <div className="flex items-end justify-center gap-1 mb-3">
+                              {/* ✅ Updated Currency Symbol to Rp */}
+                              <span className="text-white/40 text-lg mb-1.5 font-medium">Rp</span>
+                              <span className="text-5xl font-extrabold tracking-tighter leading-none text-white">
+                                {formatIDR(plan.price)}
+                              </span>
+                              <span className="text-white/40 text-sm mb-1.5 font-medium">/{plan.period.replace('per ', '')}</span>
+                            </div>
+                            <p className="text-white/50 text-sm leading-relaxed min-h-[40px] px-2 line-clamp-2">
+                              {plan.description}
+                            </p>
+                          </div>
+
+                          {/* Divider */}
+                          <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8" />
+
+                          {/* Feature List */}
+                          <ul className="space-y-4 mb-8 flex-grow">
+                            {parseFeatures(plan.features).map((feature, idx) => (
+                              <li key={idx} className="flex items-start gap-3 text-left">
+                                <div className={`mt-0.5 p-1 rounded-full flex-shrink-0 ${plan.popular ? 'bg-orange-500 text-black' : 'bg-white/10 text-white/70'
+                                  }`}>
+                                  <Check className="w-3 h-3 stroke-[3px]" />
+                                </div>
+                                <span className="text-white/80 text-sm leading-snug font-medium">
+                                  {feature}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          {/* Action Button */}
+                          <button
+                            onClick={() => handlePlanClick(plan)}
+                            className={`w-full py-4 rounded-2xl font-bold text-sm tracking-wide transition-all duration-300 ${plan.popular
+                              ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-[0_5px_30px_-5px_rgba(249,115,22,0.4)] hover:shadow-orange-500/60 hover:-translate-y-1'
+                              : 'bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-white/20 hover:-translate-y-1'
+                              }`}
+                          >
+                            Choose Plan
+                          </button>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+
+                {/* Navigation Buttons - only show when more than 3 plans */}
+                <div className="hidden md:block">
+                  <CarouselPrevious className="-left-16 h-14 w-14 bg-zinc-900/50 border border-white/10 text-white/50 hover:text-white hover:bg-orange-500 hover:border-orange-500 transition-all backdrop-blur-md z-30" />
+                  <CarouselNext className="-right-16 h-14 w-14 bg-zinc-900/50 border border-white/10 text-white/50 hover:text-white hover:bg-orange-500 hover:border-orange-500 transition-all backdrop-blur-md z-30" />
+                </div>
+              </Carousel>
+            )}
           </div>
         )}
 

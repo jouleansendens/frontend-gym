@@ -3,8 +3,8 @@ import { useContent, MessageItem } from '../../context/ContentContext';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { 
-  Trash2, MessageSquare, User, Mail, Calendar, 
+import {
+  Trash2, MessageSquare, User, Mail, Calendar,
   Phone, Target, Eye, X, CheckCircle, Filter, RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,6 +23,15 @@ export default function ManageMessages() {
       return messageDate === filterDate;
     });
   }, [messages, filterDate]);
+
+  // ✅ Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
+  const paginatedMessages = filteredMessages.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleViewMessage = (msg: MessageItem) => {
     setSelectedMessage(msg);
@@ -51,20 +60,20 @@ export default function ManageMessages() {
             <h2 className="text-3xl font-bold text-white tracking-tight">Inbox Messages</h2>
             <p className="text-zinc-400">Kelola dan baca pesan dari calon klien Anda.</p>
           </div>
-          
+
           {/* --- UI FILTER TANGGAL --- */}
           <div className="flex items-center gap-2 bg-zinc-900 p-2 rounded-2xl border border-white/10">
             <div className="pl-2 text-zinc-500">
               <Filter size={16} />
             </div>
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
               className="bg-transparent text-sm text-white outline-none [color-scheme:dark] cursor-pointer"
             />
             {filterDate && (
-              <button 
+              <button
                 onClick={resetFilter}
                 className="p-1.5 hover:bg-white/10 rounded-lg text-zinc-400 transition-colors"
                 title="Reset Filter"
@@ -98,14 +107,13 @@ export default function ManageMessages() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {filteredMessages.map((msg) => (
-                  <div 
-                    key={msg.id} 
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
-                      msg.isRead 
-                        ? 'bg-white/[0.02] border-white/5 opacity-60' 
-                        : 'bg-orange-500/[0.03] border-orange-500/20 shadow-lg shadow-orange-500/5'
-                    } hover:border-white/20`}
+                {paginatedMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${msg.isRead
+                      ? 'bg-white/[0.02] border-white/5 opacity-60'
+                      : 'bg-orange-500/[0.03] border-orange-500/20 shadow-lg shadow-orange-500/5'
+                      } hover:border-white/20`}
                     onClick={() => handleViewMessage(msg)}
                   >
                     <div className="flex-1 min-w-0">
@@ -114,7 +122,7 @@ export default function ManageMessages() {
                         {!msg.isRead && <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-zinc-500 mb-1">
-                        <span className="flex items-center gap-1"><Calendar size={12}/> {new Date(msg.date).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(msg.date).toLocaleDateString()}</span>
                         <span className="flex items-center gap-1 font-bold text-orange-500/80 tracking-tighter uppercase">{msg.goal}</span>
                       </div>
                       <p className="text-sm text-zinc-400 truncate">{msg.message}</p>
@@ -130,13 +138,54 @@ export default function ManageMessages() {
             )}
           </CardContent>
         </Card>
+
+        {/* ✅ PAGINATION - Premium Design */}
+        {totalPages > 1 && (
+          <div className="flex flex-col items-center gap-4 mt-6 pt-6 border-t border-white/10">
+            <p className="text-white/40 text-xs uppercase tracking-widest">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredMessages.length)} of {filteredMessages.length} messages
+            </p>
+            <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${currentPage === 1 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                Prev
+              </button>
+              <div className="flex items-center gap-1 px-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-all ${currentPage === page ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'text-white/40 hover:bg-white/10 hover:text-white'
+                      }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${currentPage === totalPages ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
+              >
+                Next
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* --- MODAL DETAIL MESSAGE (Sama seperti sebelumnya) --- */}
       {selectedMessage && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-black/80 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-white/10 w-full max-w-2xl rounded-[32px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-            
+
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
@@ -151,7 +200,7 @@ export default function ManageMessages() {
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedMessage(null)}
                 className="p-2 rounded-full hover:bg-white/5 text-zinc-400 transition-colors"
               >
@@ -202,15 +251,15 @@ export default function ManageMessages() {
             </div>
 
             <div className="p-6 border-t border-white/5 flex gap-3 justify-end bg-white/[0.01]">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => setSelectedMessage(null)}
                 className="text-zinc-400 hover:text-white"
               >
                 Close
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border-red-500/20"
                 onClick={() => handleDelete(selectedMessage.id)}
               >

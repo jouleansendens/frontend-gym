@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useContent, ServiceItem } from '../../context/ContentContext';
 import AdminLayout from '../../components/layouts/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
@@ -22,8 +22,27 @@ export default function ManageServices() {
     title: '',
     description: '',
     iconName: 'Dumbbell',
-    featuresText: '' // Kita input features sebagai text baris baru agar simpel
+    featuresText: ''
   });
+
+  // ✅ Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(services.length / itemsPerPage);
+  const paginatedServices = services.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // 🔍 Monitor dialog state
+  useEffect(() => {
+    console.log('📊 Dialog State Changed:', isDialogOpen);
+    if (isDialogOpen) {
+      console.log('✅ Dialog SHOULD be visible now');
+      console.log('EditingService:', editingService);
+      console.log('FormData:', formData);
+    }
+  }, [isDialogOpen, editingService, formData]);
 
   const handleOpenAdd = () => {
     setEditingService(null);
@@ -32,19 +51,44 @@ export default function ManageServices() {
   };
 
   const handleOpenEdit = (service: ServiceItem) => {
-    setEditingService(service);
-    setFormData({
-      title: service.title,
-      description: service.description,
-      iconName: service.iconName,
-      featuresText: service.features.join('\n')
-    });
-    setIsDialogOpen(true);
+    console.log('🔥 EDIT BUTTON CLICKED!');
+    console.log('Service data:', service);
+
+    try {
+      // ✅ Backend returns icon_name (snake_case)
+      const iconName = (service as any).icon_name || service.iconName || 'Dumbbell';
+
+      // ✅ Parse features - backend returns JSON string
+      let featuresArray: string[] = [];
+      if (typeof service.features === 'string') {
+        try {
+          featuresArray = JSON.parse(service.features);
+        } catch (e) {
+          console.error('Failed to parse features:', e);
+          featuresArray = [];
+        }
+      } else if (Array.isArray(service.features)) {
+        featuresArray = service.features;
+      }
+
+      setEditingService(service);
+      setFormData({
+        title: service.title || '',
+        description: service.description || '',
+        iconName: iconName,
+        featuresText: featuresArray.join('\n')
+      });
+      setIsDialogOpen(true);
+      console.log('✅ Dialog opened successfully');
+    } catch (error) {
+      console.error('❌ Error opening edit dialog:', error);
+      alert('Error loading service data. Check console.');
+    }
   };
 
   const handleSubmit = () => {
     const featuresArray = formData.featuresText.split('\n').filter(line => line.trim() !== '');
-    
+
     if (editingService) {
       updateService(editingService.id, {
         title: formData.title,
@@ -97,7 +141,7 @@ export default function ManageServices() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {services.map((service) => {
+                {paginatedServices.map((service) => {
                   const Icon = iconMap[service.iconName] || iconMap.Dumbbell;
                   return (
                     <TableRow key={service.id} className="border-white/10 hover:bg-white/5">
@@ -112,7 +156,16 @@ export default function ManageServices() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(service)} className="hover:bg-white/10 text-white/80">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              handleOpenEdit(service);
+                            }}
+                            className="hover:bg-white/10 text-white/80 cursor-pointer"
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => handleDelete(service.id)} className="hover:bg-red-500/20 text-red-400">
@@ -128,29 +181,70 @@ export default function ManageServices() {
           </CardContent>
         </Card>
 
+        {/* ✅ PAGINATION - Premium Design */}
+        {totalPages > 1 && (
+          <div className="flex flex-col items-center gap-4 mt-6 pt-6 border-t border-white/10">
+            <p className="text-white/40 text-xs uppercase tracking-widest">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, services.length)} of {services.length} services
+            </p>
+            <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${currentPage === 1 ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                Prev
+              </button>
+              <div className="flex items-center gap-1 px-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-lg text-sm font-bold transition-all ${currentPage === page ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'text-white/40 hover:bg-white/10 hover:text-white'
+                      }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1 ${currentPage === totalPages ? 'text-white/20 cursor-not-allowed' : 'text-white/60 hover:bg-white/10 hover:text-white'
+                  }`}
+              >
+                Next
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Dialog Form Add/Edit */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="bg-zinc-900 border-white/10 text-white sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>{editingService ? 'Edit Layanan' : 'Tambah Layanan Baru'}</DialogTitle>
             </DialogHeader>
-            
+
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-white/70">Nama Layanan</label>
-                <Input 
+                <Input
                   value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="bg-black/40 border-white/20" 
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="bg-black/40 border-white/20"
                   placeholder="Contoh: 1-on-1 Coaching"
                 />
               </div>
-              
+
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-white/70">Pilih Ikon</label>
-                <Select 
-                  value={formData.iconName} 
-                  onValueChange={(val) => setFormData({...formData, iconName: val})}
+                <Select
+                  value={formData.iconName}
+                  onValueChange={(val: string) => setFormData({ ...formData, iconName: val })}
                 >
                   <SelectTrigger className="bg-black/40 border-white/20">
                     <SelectValue placeholder="Pilih icon" />
@@ -160,7 +254,7 @@ export default function ManageServices() {
                       <SelectItem key={iconName} value={iconName}>
                         <div className="flex items-center gap-2">
                           {/* Render icon kecil di dropdown */}
-                          {(() => { const Ico = iconMap[iconName]; return <Ico className="h-4 w-4" /> })()} 
+                          {(() => { const Ico = iconMap[iconName]; return <Ico className="h-4 w-4" /> })()}
                           {iconName}
                         </div>
                       </SelectItem>
@@ -171,20 +265,20 @@ export default function ManageServices() {
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-white/70">Deskripsi Singkat</label>
-                <Textarea 
+                <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="bg-black/40 border-white/20" 
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="bg-black/40 border-white/20"
                   placeholder="Jelaskan layanan ini..."
                 />
               </div>
 
               <div className="grid gap-2">
                 <label className="text-sm font-medium text-white/70">Fitur (Satu per baris)</label>
-                <Textarea 
+                <Textarea
                   value={formData.featuresText}
-                  onChange={(e) => setFormData({...formData, featuresText: e.target.value})}
-                  className="bg-black/40 border-white/20 min-h-[100px]" 
+                  onChange={(e) => setFormData({ ...formData, featuresText: e.target.value })}
+                  className="bg-black/40 border-white/20 min-h-[100px]"
                   placeholder="Custom Plan&#10;Weekly Check-in&#10;Nutrition Guide"
                 />
                 <p className="text-xs text-white/40">*Tekan Enter untuk memisahkan setiap fitur.</p>
