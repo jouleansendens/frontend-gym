@@ -288,18 +288,27 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     try {
       const token = localStorage.getItem('token'); // ✅ Ambil token
 
+      // ✅ CACHE BUSTING: Tambahkan timestamp untuk prevent browser caching
+      const separator = endpoint.includes('?') ? '&' : '?';
+      const cacheBustedEndpoint = method === 'GET'
+        ? `${endpoint}${separator}_t=${Date.now()}`
+        : endpoint;
+
       const options: RequestInit = {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json', // Tambahkan ini
-          ...(token && { 'Authorization': `Bearer ${token}` }) // ✅ Kirim token jika ada
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate', // ✅ Prevent caching
+          'Pragma': 'no-cache', // ✅ HTTP 1.0 compatibility
+          'Expires': '0', // ✅ Force revalidation
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
       };
 
       if (data) options.body = JSON.stringify(data);
 
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+      const response = await fetch(`${API_BASE_URL}${cacheBustedEndpoint}`, options);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -315,16 +324,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   // ✅ Load data dari MySQL saat inisialisasi / Reset
   const loadData = async () => {
+    console.log('📡 [loadData] Fetching data from API...');
     try {
-      // Load semua data dari Laravel API
+      // ✅ FETCH PUBLIC DATA (tidak butuh token - untuk semua user)
       const [
         contentData,
         servicesData,
         pricingData,
         faqsData,
         leaderboardData,
-        messagesData,
-        imagesData,
         certificatesData,
         testimonialsData
       ] = await Promise.all([
@@ -333,15 +341,24 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         apiCall('/pricing'),
         apiCall('/faqs'),
         apiCall('/leaderboard'),
-        apiCall('/messages'),
-        apiCall('/images'),
         apiCall('/certificates'),
         apiCall('/testimonials')
       ]);
 
+      console.log('✅ [loadData] Public API Response:', {
+        contentDataKeys: contentData?.data ? Object.keys(contentData.data).length : 0,
+        siteName: contentData?.data?.['site.name'],
+        heroTitle: contentData?.data?.['hero.title']
+      });
+
       // Set state dengan data dari database
       if (contentData?.data) {
-        setContent({ ...defaultContent, ...contentData.data });
+        const mergedContent = { ...defaultContent, ...contentData.data };
+        console.log('🔄 [loadData] Setting content state:', {
+          siteName: mergedContent['site.name'],
+          heroTitle: mergedContent['hero.title']
+        });
+        setContent(mergedContent);
         // Load Layout Order if exists
         if (contentData.data['site.layout_order']) {
           try {
@@ -353,22 +370,57 @@ export function ContentProvider({ children }: { children: ReactNode }) {
             console.error('Failed to parse layout order', e);
           }
         }
+      } else {
+        console.warn('⚠️ [loadData] No content data received from API');
       }
       if (servicesData?.data) setServices(servicesData.data);
       if (pricingData?.data) setPricing(pricingData.data);
       if (faqsData?.data) setFaqs(faqsData.data);
       if (leaderboardData?.data) setLeaderboard(leaderboardData.data);
-      if (messagesData?.data) setMessages(messagesData.data);
-      if (imagesData?.data) setImages(imagesData.data);
       if (certificatesData?.data) setCertificates(certificatesData.data);
       if (testimonialsData?.data) setTestimonials(testimonialsData.data);
+
+      console.log('✅ [loadData] Public data loaded successfully');
+
+      // ✅ FETCH PRIVATE DATA (butuh token - hanya untuk admin)
+      const token = localStorage.getItem('token');
+      if (token) {
+        console.log('🔐 Token detected, fetching admin-only data...');
+        try {
+          const [messagesData, imagesData] = await Promise.all([
+            apiCall('/messages'),
+            apiCall('/images')
+          ]);
+
+          if (messagesData?.data) setMessages(messagesData.data);
+          if (imagesData?.data) setImages(imagesData.data);
+          console.log('✅ [loadData] Admin data loaded successfully');
+        } catch (adminError) {
+          console.warn('⚠️ [loadData] Failed to load admin data (token might be invalid):', adminError);
+          // Don't throw error - public data already loaded
+        }
+      } else {
+        console.log('ℹ️ No token found - skipping admin-only data (messages, images)');
+      }
+
     } catch (error) {
-      console.error('Failed to load initial data:', error);
+      console.error('❌ [loadData] Failed to load public data:', error);
     }
   };
 
+  // ✅ Load data on mount
   useEffect(() => {
     loadData();
+  }, []);
+
+  // ✅ Auto-refresh data setiap 2 menit untuk memastikan data selalu fresh
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      console.log('🔄 Auto-refreshing content from API...');
+      loadData(); // Reload data dari API
+    }, 2 * 60 * 1000); // 2 menit = 120000ms
+
+    return () => clearInterval(refreshInterval); // Cleanup saat unmount
   }, []);
 
   // --- CONTENT MANAGEMENT ---
