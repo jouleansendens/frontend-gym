@@ -15,7 +15,19 @@ import { useContent } from '../context/ContentContext';
 import { FloatingWhatsApp } from '../components/FloatingWhatsApp';
 
 export default function Home() {
-  const { sections } = useContent();
+  const { sections, isLoading } = useContent();
+
+  // Show minimal loader while data is loading to prevent flicker
+  if (isLoading) {
+    return (
+      <main className="bg-zinc-950 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-white/60 text-sm">Loading...</p>
+        </div>
+      </main>
+    );
+  }
 
   const sectionComponents: Record<string, React.ReactNode> = {
     'Hero': <Hero />,

@@ -263,6 +263,7 @@ interface ContentContextType {
   deleteTestimonial: (id: string) => void;
   sections: SectionConfig[];
   updateSections: (newSections: SectionConfig[]) => void;
+  isLoading: boolean;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -282,6 +283,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const [faqs, setFaqs] = useState<FAQItem[]>(defaultFaqs);
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>(defaultTestimonials);
   const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>(defaultLeaderboard);
+  const [isLoading, setIsLoading] = useState(true);
 
   // ✅ Helper untuk API calls
   const apiCall = async (endpoint: string, method: string = 'GET', data?: any) => {
@@ -410,7 +412,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   // ✅ Load data on mount
   useEffect(() => {
-    loadData();
+    loadData().finally(() => setIsLoading(false));
   }, []);
 
   // ✅ Auto-refresh data setiap 2 menit untuk memastikan data selalu fresh
@@ -685,7 +687,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       resetContent,
       certificates, addCertificate, updateCertificate, deleteCertificate,
       testimonials, addTestimonial, updateTestimonial, deleteTestimonial,
-      sections, updateSections
+      sections, updateSections,
+      isLoading
     }}>
       {children}
     </ContentContext.Provider>
