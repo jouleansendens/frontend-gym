@@ -2,12 +2,53 @@ import { useContent } from '../context/ContentContext';
 import { Trophy, Footprints, Flame } from 'lucide-react';
 
 export function StepsLeaderboard() {
-  const { leaderboard } = useContent();
+  const { leaderboard, isLoading } = useContent();
 
   // Urutkan dari yang terbesar ke terkecil
   const sortedData = [...leaderboard].sort((a, b) => b.steps - a.steps);
   // Ambil Top 5 saja untuk ditampilkan di Home
   const topRankings = sortedData.slice(0, 5);
+
+  // ✅ Show Loading Skeleton
+  if (isLoading) {
+    return (
+      <section className="py-24 bg-black relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-600/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <div className="h-4 w-40 bg-zinc-800 rounded mx-auto mb-4 animate-pulse" />
+            <div className="h-12 w-80 bg-zinc-800 rounded mx-auto mb-6 animate-pulse" />
+            <div className="h-4 w-96 bg-zinc-800 rounded mx-auto animate-pulse" />
+          </div>
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-zinc-900/50 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm">
+              <div className="grid grid-cols-12 gap-4 p-6 border-b border-white/5 bg-white/5">
+                <div className="col-span-2 h-4 bg-zinc-800 rounded animate-pulse" />
+                <div className="col-span-6 h-4 bg-zinc-800 rounded animate-pulse" />
+                <div className="col-span-4 h-4 bg-zinc-800 rounded animate-pulse ml-auto w-16" />
+              </div>
+              <div className="divide-y divide-white/5">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="grid grid-cols-12 gap-4 p-6 items-center">
+                    <div className="col-span-2 flex justify-center">
+                      <div className="w-6 h-6 bg-zinc-800 rounded-full animate-pulse" />
+                    </div>
+                    <div className="col-span-6 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-zinc-800 rounded-full animate-pulse" />
+                      <div className="h-4 w-32 bg-zinc-800 rounded animate-pulse" />
+                    </div>
+                    <div className="col-span-4 flex justify-end">
+                      <div className="h-6 w-20 bg-zinc-800 rounded animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-24 bg-black relative overflow-hidden">
@@ -75,7 +116,15 @@ export function StepsLeaderboard() {
                         <div className={`w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold border-2 ${index === 0 ? 'border-yellow-500' : 'border-white/10'
                           }`}>
                           {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                            <img
+                              src={
+                                item.image.startsWith('http') || item.image.startsWith('data:') || item.image.startsWith('/')
+                                  ? item.image
+                                  : `/${item.image}` // Fallback for relative paths without leading slash
+                              }
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <div className={`w-full h-full flex items-center justify-center ${index === 0 ? 'bg-yellow-500 text-black' : 'bg-zinc-800 text-white/70'
                               }`}>

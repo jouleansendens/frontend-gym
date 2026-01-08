@@ -81,9 +81,27 @@ export default function Settings() {
     twitter: true
   });
 
-  // Intro Video State
+  // Intro Video Section State (for landing page section)
   const [videoData, setVideoData] = useState({
     video_url: '',
+    video_local: '', // Base64 or blob URL for local file
+    video_source: 'url' as 'url' | 'local', // Track which source to use
+    title: '',
+    description: '',
+    // Stats
+    stat1_value: '10+',
+    stat1_label: 'Years Experience',
+    stat2_value: '500+',
+    stat2_label: 'Happy Clients',
+    stat3_value: '100%',
+    stat3_label: 'Dedication'
+  });
+
+  // Hero Modal Video State (for "Watch Video" button in Hero)
+  const [heroVideoData, setHeroVideoData] = useState({
+    video_url: '',
+    video_local: '', // Base64 for local file
+    video_source: 'url' as 'url' | 'local',
     title: '',
     description: ''
   });
@@ -139,7 +157,24 @@ export default function Settings() {
       twitter: content["social.twitter.enabled"] !== "false"
     });
     setVideoData({
+      video_url: content["introsection.video_url"] || "",
+      video_local: content["introsection.video_local"] || "",
+      video_source: content["introsection.video_local"] ? 'local' : 'url',
+      title: content["introsection.title"] || "",
+      description: content["introsection.description"] || "",
+      // Stats
+      stat1_value: content["introsection.stat1_value"] || "10+",
+      stat1_label: content["introsection.stat1_label"] || "Years Experience",
+      stat2_value: content["introsection.stat2_value"] || "500+",
+      stat2_label: content["introsection.stat2_label"] || "Happy Clients",
+      stat3_value: content["introsection.stat3_value"] || "100%",
+      stat3_label: content["introsection.stat3_label"] || "Dedication"
+    });
+    // Hero Modal "Watch Video" button
+    setHeroVideoData({
       video_url: content["intro.video_url"] || "",
+      video_local: content["intro.video_local"] || "",
+      video_source: content["intro.video_local"] ? 'local' : 'url',
       title: content["intro.title"] || "",
       description: content["intro.description"] || ""
     });
@@ -213,13 +248,37 @@ export default function Settings() {
     }
   };
 
-  // Handler for Video Content
-  const handleSaveVideo = () => {
-    updateContent("intro.video_url", videoData.video_url);
-    updateContent("intro.title", videoData.title);
-    updateContent("intro.description", videoData.description);
+  // Handler for Video Content (uses introsection.* keys - separate from Hero modal)
+  const handleSaveVideo = async () => {
+    try {
+      await updateContent("introsection.video_url", videoData.video_url);
+      await updateContent("introsection.video_local", videoData.video_local);
+      await updateContent("introsection.title", videoData.title);
+      await updateContent("introsection.description", videoData.description);
+      // Stats
+      await updateContent("introsection.stat1_value", videoData.stat1_value);
+      await updateContent("introsection.stat1_label", videoData.stat1_label);
+      await updateContent("introsection.stat2_value", videoData.stat2_value);
+      await updateContent("introsection.stat2_label", videoData.stat2_label);
+      await updateContent("introsection.stat3_value", videoData.stat3_value);
+      await updateContent("introsection.stat3_label", videoData.stat3_label);
+      toast.success("Intro video section saved!");
+    } catch (error) {
+      toast.error("Failed to save video settings.");
+    }
+  };
 
-    toast.success("Intro video settings saved!");
+  // Handler for Hero Modal "Watch Video" button (uses intro.* keys)
+  const handleSaveHeroVideo = async () => {
+    try {
+      await updateContent("intro.video_url", heroVideoData.video_url);
+      await updateContent("intro.video_local", heroVideoData.video_local);
+      await updateContent("intro.title", heroVideoData.title);
+      await updateContent("intro.description", heroVideoData.description);
+      toast.success("Hero video settings saved!");
+    } catch (error) {
+      toast.error("Failed to save hero video settings.");
+    }
   };
 
   // Handler for Coach Profile
@@ -550,29 +609,109 @@ export default function Settings() {
                 <div>
                   <CardTitle>Intro Video Settings</CardTitle>
                   <CardDescription className="text-white/50">
-                    Configure the introductory video displayed when users click "Watch Video".
+                    Configure the introductory video displayed on the landing page.
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>YouTube Video URL</Label>
-                <Input
-                  value={videoData.video_url}
-                  onChange={(e) => setVideoData({ ...videoData, video_url: e.target.value })}
-                  placeholder="https://www.youtube.com/watch?v=xxxxx or embed URL"
-                  className="bg-black/40 border-white/20"
-                />
-                <p className="text-xs text-white/40">Supports YouTube watch URLs, embed URLs, or direct video file URLs.</p>
+              {/* Video Source Selection */}
+              <div className="space-y-3">
+                <Label className="text-white/70">Video Source</Label>
+                <div className="flex gap-4">
+                  <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${videoData.video_source === 'url' ? 'bg-red-500/20 border-red-500' : 'bg-black/30 border-white/10 hover:border-white/30'}`}>
+                    <input
+                      type="radio"
+                      name="video_source"
+                      value="url"
+                      checked={videoData.video_source === 'url'}
+                      onChange={() => setVideoData({ ...videoData, video_source: 'url' })}
+                      className="accent-red-500"
+                    />
+                    <span className="text-sm">URL (YouTube, Vimeo, etc.)</span>
+                  </label>
+                  <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${videoData.video_source === 'local' ? 'bg-red-500/20 border-red-500' : 'bg-black/30 border-white/10 hover:border-white/30'}`}>
+                    <input
+                      type="radio"
+                      name="video_source"
+                      value="local"
+                      checked={videoData.video_source === 'local'}
+                      onChange={() => setVideoData({ ...videoData, video_source: 'local' })}
+                      className="accent-red-500"
+                    />
+                    <span className="text-sm">Local File Upload</span>
+                  </label>
+                </div>
               </div>
+
+              {/* URL Input */}
+              {videoData.video_source === 'url' && (
+                <div className="space-y-2">
+                  <Label>Video URL</Label>
+                  <Input
+                    value={videoData.video_url}
+                    onChange={(e) => setVideoData({ ...videoData, video_url: e.target.value })}
+                    placeholder="https://www.youtube.com/embed/xxxxx or direct video URL"
+                    className="bg-black/40 border-white/20"
+                  />
+                  <p className="text-xs text-white/40">Supports YouTube embed URLs, Vimeo, or direct .mp4 links.</p>
+                </div>
+              )}
+
+              {/* Local File Upload */}
+              {videoData.video_source === 'local' && (
+                <div className="space-y-3">
+                  <Label>Upload Video File</Label>
+                  <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-red-500/50 transition-colors">
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/ogg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Convert to base64 for storage (or could use blob URL for preview)
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setVideoData({ ...videoData, video_local: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                      id="video-upload"
+                    />
+                    <label htmlFor="video-upload" className="cursor-pointer">
+                      <Video className="w-12 h-12 mx-auto text-white/30 mb-3" />
+                      <p className="text-white/60 text-sm">Click to upload video</p>
+                      <p className="text-white/40 text-xs mt-1">MP4, WebM, OGG (Max 50MB recommended)</p>
+                    </label>
+                  </div>
+                  {videoData.video_local && (
+                    <div className="bg-black/30 rounded-lg p-3 flex items-center justify-between">
+                      <span className="text-green-400 text-sm flex items-center gap-2">
+                        ✓ Video uploaded
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setVideoData({ ...videoData, video_local: '' })}
+                        className="text-red-400 hover:text-red-300 text-xs"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Title & Description */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Video Title</Label>
                   <Input
                     value={videoData.title}
                     onChange={(e) => setVideoData({ ...videoData, title: e.target.value })}
-                    placeholder="Welcome to My Fitness Journey"
+                    placeholder="Get to Know Your Coach"
                     className="bg-black/40 border-white/20"
                   />
                 </div>
@@ -582,16 +721,206 @@ export default function Settings() {
                 <Textarea
                   value={videoData.description}
                   onChange={(e) => setVideoData({ ...videoData, description: e.target.value })}
+                  placeholder="Watch this short video to learn more about my coaching philosophy..."
+                  className="bg-black/40 border-white/20 min-h-[80px]"
+                />
+              </div>
+
+              {/* Stats Section */}
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <Label className="text-white/70">Section Stats (3 items displayed)</Label>
+                <div className="grid md:grid-cols-3 gap-4">
+                  {/* Stat 1 */}
+                  <div className="bg-black/30 border border-white/5 rounded-lg p-3 space-y-2">
+                    <span className="text-xs text-orange-400 uppercase tracking-wider">Stat 1</span>
+                    <Input
+                      value={videoData.stat1_value}
+                      onChange={(e) => setVideoData({ ...videoData, stat1_value: e.target.value })}
+                      placeholder="10+"
+                      className="bg-black/40 border-white/20 text-lg font-bold"
+                    />
+                    <Input
+                      value={videoData.stat1_label}
+                      onChange={(e) => setVideoData({ ...videoData, stat1_label: e.target.value })}
+                      placeholder="Years Experience"
+                      className="bg-black/40 border-white/20 text-xs"
+                    />
+                  </div>
+                  {/* Stat 2 */}
+                  <div className="bg-black/30 border border-white/5 rounded-lg p-3 space-y-2">
+                    <span className="text-xs text-orange-400 uppercase tracking-wider">Stat 2</span>
+                    <Input
+                      value={videoData.stat2_value}
+                      onChange={(e) => setVideoData({ ...videoData, stat2_value: e.target.value })}
+                      placeholder="500+"
+                      className="bg-black/40 border-white/20 text-lg font-bold"
+                    />
+                    <Input
+                      value={videoData.stat2_label}
+                      onChange={(e) => setVideoData({ ...videoData, stat2_label: e.target.value })}
+                      placeholder="Happy Clients"
+                      className="bg-black/40 border-white/20 text-xs"
+                    />
+                  </div>
+                  {/* Stat 3 */}
+                  <div className="bg-black/30 border border-white/5 rounded-lg p-3 space-y-2">
+                    <span className="text-xs text-orange-400 uppercase tracking-wider">Stat 3 (Accent)</span>
+                    <Input
+                      value={videoData.stat3_value}
+                      onChange={(e) => setVideoData({ ...videoData, stat3_value: e.target.value })}
+                      placeholder="100%"
+                      className="bg-black/40 border-white/20 text-lg font-bold"
+                    />
+                    <Input
+                      value={videoData.stat3_label}
+                      onChange={(e) => setVideoData({ ...videoData, stat3_label: e.target.value })}
+                      placeholder="Dedication"
+                      className="bg-black/40 border-white/20 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={handleSaveVideo}
+                  className="bg-red-500 hover:bg-red-600 text-white"
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save Section Video
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* --- CARD: HERO MODAL VIDEO (Watch Video Button) --- */}
+          <Card className="bg-zinc-900 border-white/10 text-white">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500/10 rounded-lg">
+                  <Video className="w-5 h-5 text-purple-500" />
+                </div>
+                <div>
+                  <CardTitle>Hero "Watch Video" Button</CardTitle>
+                  <CardDescription className="text-white/50">
+                    Configure the video modal that opens when clicking "Watch Video" in the Hero section.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Video Source Selection */}
+              <div className="space-y-3">
+                <Label className="text-white/70">Video Source</Label>
+                <div className="flex gap-4">
+                  <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${heroVideoData.video_source === 'url' ? 'bg-purple-500/20 border-purple-500' : 'bg-black/30 border-white/10 hover:border-white/30'}`}>
+                    <input
+                      type="radio"
+                      name="hero_video_source"
+                      value="url"
+                      checked={heroVideoData.video_source === 'url'}
+                      onChange={() => setHeroVideoData({ ...heroVideoData, video_source: 'url' })}
+                      className="accent-purple-500"
+                    />
+                    <span className="text-sm">URL (YouTube)</span>
+                  </label>
+                  <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${heroVideoData.video_source === 'local' ? 'bg-purple-500/20 border-purple-500' : 'bg-black/30 border-white/10 hover:border-white/30'}`}>
+                    <input
+                      type="radio"
+                      name="hero_video_source"
+                      value="local"
+                      checked={heroVideoData.video_source === 'local'}
+                      onChange={() => setHeroVideoData({ ...heroVideoData, video_source: 'local' })}
+                      className="accent-purple-500"
+                    />
+                    <span className="text-sm">Local File Upload</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* URL Input */}
+              {heroVideoData.video_source === 'url' && (
+                <div className="space-y-2">
+                  <Label>YouTube Video URL</Label>
+                  <Input
+                    value={heroVideoData.video_url}
+                    onChange={(e) => setHeroVideoData({ ...heroVideoData, video_url: e.target.value })}
+                    placeholder="https://www.youtube.com/watch?v=xxxxx or embed URL"
+                    className="bg-black/40 border-white/20"
+                  />
+                  <p className="text-xs text-white/40">YouTube watch links are auto-converted to embed format.</p>
+                </div>
+              )}
+
+              {/* Local File Upload */}
+              {heroVideoData.video_source === 'local' && (
+                <div className="space-y-3">
+                  <Label>Upload Video File</Label>
+                  <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-purple-500/50 transition-colors">
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/ogg"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setHeroVideoData({ ...heroVideoData, video_local: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                      id="hero-video-upload"
+                    />
+                    <label htmlFor="hero-video-upload" className="cursor-pointer">
+                      <Video className="w-12 h-12 mx-auto text-white/30 mb-3" />
+                      <p className="text-white/60 text-sm">Click to upload video</p>
+                      <p className="text-white/40 text-xs mt-1">MP4, WebM (Max 10MB recommended)</p>
+                    </label>
+                  </div>
+                  {heroVideoData.video_local && (
+                    <div className="bg-black/30 rounded-lg p-3 flex items-center justify-between">
+                      <span className="text-green-400 text-sm flex items-center gap-2">
+                        ✓ Video uploaded
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setHeroVideoData({ ...heroVideoData, video_local: '' })}
+                        className="text-red-400 hover:text-red-300 text-xs"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Modal Title</Label>
+                  <Input
+                    value={heroVideoData.title}
+                    onChange={(e) => setHeroVideoData({ ...heroVideoData, title: e.target.value })}
+                    placeholder="Welcome to My Fitness Journey"
+                    className="bg-black/40 border-white/20"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Modal Description</Label>
+                <Textarea
+                  value={heroVideoData.description}
+                  onChange={(e) => setHeroVideoData({ ...heroVideoData, description: e.target.value })}
                   placeholder="A brief description about the video..."
                   className="bg-black/40 border-white/20 min-h-[80px]"
                 />
               </div>
               <div className="flex justify-end pt-2">
                 <Button
-                  onClick={handleSaveVideo}
-                  className="bg-red-500 hover:bg-red-600 text-white"
+                  onClick={handleSaveHeroVideo}
+                  className="bg-purple-500 hover:bg-purple-600 text-white"
                 >
-                  <Save className="w-4 h-4 mr-2" /> Save Video Settings
+                  <Save className="w-4 h-4 mr-2" /> Save Hero Video
                 </Button>
               </div>
             </CardContent>
@@ -800,7 +1129,7 @@ export default function Settings() {
                             </span>
                             <button
                               type="button"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
                                 const isFeatured = Boolean(cert.featured);
                                 const newFeatured = !isFeatured;
@@ -813,8 +1142,12 @@ export default function Settings() {
                                   }
                                 }
 
-                                updateCertificate(cert.id, { featured: newFeatured });
-                                toast.success(newFeatured ? 'Ditampilkan di landing page!' : 'Disembunyikan dari landing page');
+                                try {
+                                  await updateCertificate(cert.id, { featured: newFeatured });
+                                  toast.success(newFeatured ? 'Ditampilkan di landing page!' : 'Disembunyikan dari landing page');
+                                } catch (error) {
+                                  toast.error("Gagal menyimpan perubahan. Coba lagi.");
+                                }
                               }}
                               className={`relative w-12 h-6 rounded-full transition-all cursor-pointer shadow-inner ${Boolean(cert.featured) ? 'bg-green-500' : 'bg-zinc-600'}`}
                             >

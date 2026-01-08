@@ -2,13 +2,46 @@ import { Star, Quote } from 'lucide-react';
 import { useContent } from '../context/ContentContext';
 
 export function Testimonials() {
-  const { testimonials, content } = useContent();
+  const { testimonials, content, isLoading } = useContent();
 
   // Ambil pengaturan jumlah dari admin, default 3
   const displayCount = parseInt(content["testimonial.display_count"] || "3");
 
-  // ✅ Debug: Log semua testimonials untuk cek struktur data
-  console.log('All testimonials from DB:', testimonials);
+  // ✅ Show Loading Skeleton
+  if (isLoading) {
+    return (
+      <section id="testimonials" className="py-20 bg-zinc-900">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <div className="h-4 w-32 bg-zinc-800 rounded mx-auto mb-4 animate-pulse" />
+            <div className="h-10 w-64 bg-zinc-800 rounded mx-auto animate-pulse" />
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-black/40 border border-white/5 rounded-2xl p-8 animate-pulse">
+                <div className="w-10 h-10 bg-zinc-800 rounded mb-4" />
+                <div className="flex gap-1 mb-4">
+                  {[1, 2, 3, 4, 5].map(s => <div key={s} className="w-4 h-4 bg-zinc-800 rounded-full" />)}
+                </div>
+                <div className="space-y-2 mb-6">
+                  <div className="h-4 bg-zinc-800 rounded w-full" />
+                  <div className="h-4 bg-zinc-800 rounded w-3/4" />
+                  <div className="h-4 bg-zinc-800 rounded w-5/6" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-zinc-800 rounded-full" />
+                  <div>
+                    <div className="h-4 w-32 bg-zinc-800 rounded mb-2" />
+                    <div className="h-3 w-20 bg-zinc-800 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   // ✅ Filter hanya testimonial yang VISIBLE (is_active = 1 atau true)
   const activeTestimonials = testimonials
@@ -23,8 +56,6 @@ export function Testimonials() {
       return activeStr === "1" || activeStr === "true";
     })
     .slice(0, displayCount);
-
-  console.log('Active testimonials after filter:', activeTestimonials);
 
   // Jika tidak ada testimonial aktif, jangan render section ini sama sekali
   if (activeTestimonials.length === 0) {
@@ -51,9 +82,13 @@ export function Testimonials() {
               </div>
               <p className="text-white/80 mb-6 italic leading-relaxed">"{t.text}"</p>
               <div className="flex items-center gap-4">
-                {/* Fallback image jika image dari DB kosong */}
+                {/* Support: http URLs, base64, relative paths */}
                 <img
-                  src={t.image && t.image.startsWith('http') ? t.image : 'https://via.placeholder.com/150'}
+                  src={
+                    t.image && (t.image.startsWith('http') || t.image.startsWith('data:') || t.image.startsWith('/'))
+                      ? t.image
+                      : 'https://via.placeholder.com/150'
+                  }
                   alt={t.name}
                   className="w-12 h-12 rounded-full object-cover"
                 />

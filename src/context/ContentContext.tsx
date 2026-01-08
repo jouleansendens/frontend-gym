@@ -27,6 +27,7 @@ export type SectionConfig = {
 
 const defaultSections: SectionConfig[] = [
   { id: 'hero', label: 'Hero Section', component: 'Hero', isVisible: true },
+  { id: 'intro_video', label: 'Intro Video', component: 'IntroVideo', isVisible: true },
   { id: 'about', label: 'About Me', component: 'About', isVisible: true },
   { id: 'quote', label: 'Quote Banner', component: 'QuoteBanner', isVisible: true },
   { id: 'services', label: 'Services', component: 'Services', isVisible: true },
@@ -92,6 +93,17 @@ const defaultContent: Record<string, string> = {
   "intro.video_url": "https://www.youtube.com/embed/dQw4w9WgXcQ",
   "intro.title": "Welcome to My Fitness Journey",
   "intro.description": "Watch this introduction to learn more about my coaching philosophy and how I can help you transform your life.",
+  // Intro Video Section (landing page section - separate from Hero modal)
+  "introsection.video_url": "",
+  "introsection.video_local": "",
+  "introsection.title": "Meet Your Coach",
+  "introsection.description": "Get to know the person who will guide you on your fitness journey. Watch this short introduction to understand my approach and philosophy.",
+  "introsection.stat1_value": "10+",
+  "introsection.stat1_label": "Years Experience",
+  "introsection.stat2_value": "500+",
+  "introsection.stat2_label": "Happy Clients",
+  "introsection.stat3_value": "100%",
+  "introsection.stat3_label": "Dedication",
   "contact_info_visibility": "1", // ✅ Default VISIBLE (Address info)
   "contact_form_visibility": "1"  // ✅ Default VISIBLE (Message inputs)
 };
@@ -257,7 +269,7 @@ interface ContentContextType {
   resetContent: () => void;
   certificates: CertificateItem[];
   addCertificate: (data: any) => void;
-  updateCertificate: (id: string, data: any) => void;
+  updateCertificate: (id: string | number, data: any) => void;
   deleteCertificate: (id: string) => void;
   testimonials: TestimonialItem[];
   addTestimonial: (data: any) => void;
@@ -369,7 +381,26 @@ export function ContentProvider({ children }: { children: ReactNode }) {
             const rawData = contentData.data['site.layout_order'];
             // Handle both string (JSON) and array (already parsed by backend)
             const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-            if (Array.isArray(parsed)) setSections(parsed);
+            if (Array.isArray(parsed)) {
+              // ✅ MIGRATION: Merge new sections from defaultSections into saved layout
+              const savedIds = parsed.map((s: SectionConfig) => s.id);
+              const missingSections = defaultSections.filter(ds => !savedIds.includes(ds.id));
+
+              if (missingSections.length > 0) {
+                console.log('🔄 [Migration] Adding new sections:', missingSections.map(s => s.id));
+                // Insert new sections at their default position (after hero, before others)
+                const heroIndex = parsed.findIndex((s: SectionConfig) => s.id === 'hero');
+                const insertIndex = heroIndex !== -1 ? heroIndex + 1 : 0;
+                const updatedSections = [
+                  ...parsed.slice(0, insertIndex),
+                  ...missingSections,
+                  ...parsed.slice(insertIndex)
+                ];
+                setSections(updatedSections);
+              } else {
+                setSections(parsed);
+              }
+            }
           } catch (e) {
             console.error('Failed to parse layout order', e);
           }
@@ -541,10 +572,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const updateLeaderboardEntry = async (id: string, data: any) => {
     try {
+      // Optimistic update
+      const numericId = Number(id);
+      setLeaderboard(prev => prev.map(item => Number(item.id) === numericId ? { ...item, ...data } : item));
+
       await apiCall(`/leaderboard/${id}`, 'PUT', data);
-      setLeaderboard(prev => prev.map(item => item.id === id ? { ...item, ...data } : item));
     } catch (error) {
       console.error('Failed to update leaderboard entry:', error);
+      // Revert/Fetch could be added here, but for now just log
+      throw error; // Re-throw so UI can show toast
     }
   };
 
@@ -595,14 +631,22 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateCertificate = async (id: string, data: any) => {
-    // Optimistic update: update UI immediately
-    setCertificates(prev => prev.map(item => item.id === id ? { ...item, ...data } : item));
+  const updateCertificate = async (id: string | number, data: any) => {
+    const numericId = Number(id);
+    console.log('[updateCertificate] Updating:', { id: numericId, data });
+
+    // Optimistic update: update UI immediately (use Number for comparison)
+    setCertificates(prev => prev.map(item =>
+      Number(item.id) === numericId ? { ...item, ...data } : item
+    ));
+
     try {
-      await apiCall(`/certificates/${id}`, 'PUT', data);
+      const response = await apiCall(`/certificates/${numericId}`, 'PUT', data);
+      console.log('[updateCertificate] Response:', response);
     } catch (error) {
-      console.error('Failed to update certificate:', error);
-      // Optional: rollback here if needed, but for now allow UI consistency
+      console.error('[updateCertificate] Failed:', error);
+      // Re-throw so caller can show error toast
+      throw error;
     }
   };
 

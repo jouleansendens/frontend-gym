@@ -266,6 +266,26 @@ export default function ManageTestimonials() {
                         onClick={async () => {
                           const currentActive = t.isActive || t.is_active;
                           const newValue = !currentActive;
+
+                          // Get display limit
+                          const displayLimit = parseInt(content["testimonial.display_count"] || "3");
+
+                          // Count currently visible testimonials
+                          const currentVisibleCount = testimonials.filter(item => {
+                            const isActive = item.isActive || item.is_active;
+                            const activeStr = String(isActive);
+                            return activeStr === "1" || activeStr === "true";
+                          }).length;
+
+                          // If trying to make visible and already at limit
+                          if (newValue && currentVisibleCount >= displayLimit) {
+                            toast.error(
+                              `Maksimal ${displayLimit} testimoni yang bisa ditampilkan! Silakan hide ${currentVisibleCount - displayLimit + 1} testimoni lain terlebih dahulu.`,
+                              { duration: 4000 }
+                            );
+                            return;
+                          }
+
                           console.log('🔄 Toggling testimonial:', t.id, 'from', currentActive, 'to', newValue);
                           try {
                             await updateTestimonial(t.id, { is_active: newValue ? 1 : 0 });

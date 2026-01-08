@@ -7,6 +7,9 @@ export default function IntroVideo() {
     const { content } = useContent();
 
     const videoUrl = content['intro.video_url'] || 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+    const videoLocal = content['intro.video_local'];
+    const videoSource = content['intro.video_local'] ? 'local' : 'url'; // Auto-detect based on data presence
+
     const title = content['intro.title'] || 'Welcome to My Fitness Journey';
     const description = content['intro.description'] || 'Watch this introduction to learn more about my coaching philosophy and how I can help you transform your life.';
 
@@ -25,7 +28,7 @@ export default function IntroVideo() {
     };
 
     const embedUrl = getEmbedUrl(videoUrl);
-    const isYouTube = embedUrl.includes('youtube.com/embed');
+    const isYouTube = videoSource === 'url' && embedUrl.includes('youtube.com/embed');
 
     return (
         <div className="min-h-screen bg-black flex flex-col">
@@ -62,7 +65,16 @@ export default function IntroVideo() {
                     {/* Video Player */}
                     <div className="relative rounded-2xl overflow-hidden bg-zinc-900 shadow-2xl shadow-orange-500/10">
                         <div className="aspect-video">
-                            {isYouTube ? (
+                            {videoSource === 'local' && videoLocal ? (
+                                <video
+                                    src={videoLocal}
+                                    controls
+                                    autoPlay
+                                    className="w-full h-full object-cover"
+                                >
+                                    Your browser does not support the video tag.
+                                </video>
+                            ) : isYouTube ? (
                                 <iframe
                                     src={embedUrl}
                                     title={title}

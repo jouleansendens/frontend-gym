@@ -1,5 +1,6 @@
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
+import { IntroVideo } from '../components/IntroVideo';
 import { About } from '../components/About';
 import { Services } from '../components/Services';
 import { CoachBio } from '../components/CoachBio';
@@ -31,6 +32,7 @@ export default function Home() {
 
   const sectionComponents: Record<string, React.ReactNode> = {
     'Hero': <Hero />,
+    'IntroVideo': <IntroVideo />,
     'About': <About />,
     'QuoteBanner': <QuoteBanner />,
     'Services': <Services />,
