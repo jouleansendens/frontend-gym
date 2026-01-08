@@ -155,7 +155,7 @@ export function IntroVideo() {
                             <div className={`relative overflow-hidden shadow-2xl transition-all duration-500 flex flex-col
                                 ${isPortraitEmbed ? 'bg-zinc-100' : 'bg-black'}
                                 ${(isTikTok || isShorts) ? 'rounded-[2.5rem] border-[6px] border-zinc-950 shadow-orange-500/10 ring-1 ring-white/10 max-w-[340px] mx-auto aspect-[9/16]' : ''}
-                                ${isInstagram ? 'rounded-xl border border-zinc-200 max-w-[400px] mx-auto min-h-[800px]' : ''}
+                                ${isInstagram ? 'rounded-xl border border-zinc-200 max-w-[400px] mx-auto min-h-[600px]' : ''}
                                 ${!isPortraitEmbed ? 'rounded-2xl border border-white/10 shadow-orange-500/10 flex justify-center aspect-video' : ''}
                             `}>
                                 {videoSource ? (

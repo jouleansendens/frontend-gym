@@ -90,16 +90,17 @@ export default function IntroVideo() {
                     </div>
 
                     {/* Video Player - Consistent with Component Logic */}
-                    <div className={`relative overflow-hidden bg-black shadow-2xl mx-auto transition-all duration-500
+                    <div className={`relative overflow-hidden shadow-2xl mx-auto transition-all duration-500 flex flex-col
+                        ${isPortraitEmbed ? 'bg-zinc-100' : 'bg-black'}
                         ${(isTikTok || isShorts) ? 'rounded-[2.5rem] border-[6px] border-zinc-950 shadow-orange-500/10 ring-1 ring-white/10 max-w-[340px] aspect-[9/16]' : ''}
-                        ${isInstagram ? 'rounded-xl border border-white/10 max-w-[400px] min-h-[500px]' : ''}
+                        ${isInstagram ? 'rounded-xl border border-zinc-200 max-w-[400px] min-h-[600px]' : ''}
                         ${!isPortraitEmbed ? 'rounded-2xl border border-white/5 shadow-orange-500/10 w-full aspect-video' : ''}
                     `}>
                         {/* Empty Default Class reset handled by conditional render below if needed, but styling is applied to container */}
 
                         {videoSource === 'local' && videoLocal ? (
                             // ✅ Local Video: Auto Auto aspect ratio with constraints
-                            <div className="w-full h-full flex justify-center bg-black items-center">
+                            <div className="w-full h-full flex justify-center bg-black items-center flex-1">
                                 <video
                                     src={videoLocal}
                                     controls
@@ -111,17 +112,33 @@ export default function IntroVideo() {
                             </div>
                         ) : (
                             // ✅ Embeds (YouTube, TikTok, IG)
-                            <div className={`w-full h-full ${isPortraitEmbed ? 'bg-white' : ''}`}>
+                            <div className={`w-full relative ${isPortraitEmbed ? 'bg-white' : ''} flex-1`}>
                                 {isEmbedSource ? (
                                     <>
+                                        {/* Fallback Link for Blocked Embeds (Behind iframe, visible if iframe is transparent/blocked) */}
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-100 z-0 p-6 text-center text-zinc-500">
+                                            <p className="text-xs mb-4">
+                                                Video loading...
+                                            </p>
+                                            <a
+                                                href={videoUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full font-bold transition-all shadow-lg shadow-orange-500/20 group-hover/btn:scale-105"
+                                            >
+                                                <Play className="w-5 h-5 fill-current" />
+                                                Watch on {isInstagram ? 'Instagram' : isTikTok ? 'TikTok' : isShorts ? 'YouTube' : 'Platform'}
+                                            </a>
+                                        </div>
+
                                         <iframe
                                             src={embedUrl}
                                             title={title}
-                                            className="w-full h-full"
+                                            className="absolute inset-0 w-full h-full z-10"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
                                             scrolling="no"
-                                            style={{ border: 'none' }}
+                                            style={{ border: 'none', backgroundColor: 'transparent' }}
                                         />
                                         {/* TikTok Inner Shadow only */}
                                         {(isTikTok || isShorts) && <div className="absolute inset-0 pointer-events-none rounded-[2.2rem] ring-1 ring-black/10 inset-shadow"></div>}
