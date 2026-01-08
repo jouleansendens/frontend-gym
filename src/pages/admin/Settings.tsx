@@ -821,7 +821,7 @@ export default function Settings() {
                       onChange={() => setHeroVideoData({ ...heroVideoData, video_source: 'url' })}
                       className="accent-purple-500"
                     />
-                    <span className="text-sm">URL (YouTube)</span>
+                    <span className="text-sm">URL (YT/IG/TikTok)</span>
                   </label>
                   <label className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${heroVideoData.video_source === 'local' ? 'bg-purple-500/20 border-purple-500' : 'bg-black/30 border-white/10 hover:border-white/30'}`}>
                     <input

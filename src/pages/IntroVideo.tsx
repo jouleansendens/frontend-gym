@@ -15,20 +15,47 @@ export default function IntroVideo() {
 
     // Check if it's a YouTube URL and convert to embed format if needed
     const getEmbedUrl = (url: string) => {
-        // Already an embed URL
+        if (!url) return '';
+
+        // Already an embed URL (generic)
         if (url.includes('/embed/')) return url;
 
-        // YouTube watch URL
-        const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+        // YouTube (Standard & Shorts)
+        const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([^&?/\s]+)/);
         if (youtubeMatch) {
             return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+        }
+
+        // Instagram (Post or Reel) -> Append /embed
+        if (url.includes('instagram.com/p/') || url.includes('instagram.com/reel/')) {
+            let cleanUrl = url.split('?')[0];
+            // Strip protocol and www to rebuild smoothly
+            cleanUrl = cleanUrl.replace(/^https?:\/\//, '').replace(/^www\./, '');
+            // Force https://www.
+            const finalUrl = `https://www.instagram.com/${cleanUrl.split('instagram.com/')[1]}`;
+
+            const urlWithSlash = finalUrl.endsWith('/') ? finalUrl : `${finalUrl}/`;
+            return `${urlWithSlash}embed`;
+        }
+
+        // TikTok
+        const tiktokMatch = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+        if (tiktokMatch) {
+            return `https://www.tiktok.com/embed/v2/${tiktokMatch[1]}`;
         }
 
         return url;
     };
 
     const embedUrl = getEmbedUrl(videoUrl);
-    const isYouTube = videoSource === 'url' && embedUrl.includes('youtube.com/embed');
+    // Determine if it's an embeddable URL source (not local)
+    const isEmbedSource = videoSource === 'url';
+
+    // ✅ Detect Portrait Sources for Page Layout
+    const isInstagram = videoUrl.includes('instagram.com');
+    const isTikTok = videoUrl.includes('tiktok.com');
+    const isShorts = videoUrl.includes('/shorts/');
+    const isPortraitEmbed = isInstagram || isTikTok || isShorts;
 
     return (
         <div className="min-h-screen bg-black flex flex-col">
@@ -62,37 +89,50 @@ export default function IntroVideo() {
                         </p>
                     </div>
 
-                    {/* Video Player */}
-                    <div className="relative rounded-2xl overflow-hidden bg-zinc-900 shadow-2xl shadow-orange-500/10">
-                        <div className="aspect-video">
-                            {videoSource === 'local' && videoLocal ? (
+                    {/* Video Player - Consistent with Component Logic */}
+                    <div className={`relative overflow-hidden bg-black shadow-2xl mx-auto transition-all duration-500
+                        ${(isTikTok || isShorts) ? 'rounded-[2.5rem] border-[6px] border-zinc-950 shadow-orange-500/10 ring-1 ring-white/10 max-w-[340px] aspect-[9/16]' : ''}
+                        ${isInstagram ? 'rounded-xl border border-white/10 max-w-[400px] min-h-[500px]' : ''}
+                        ${!isPortraitEmbed ? 'rounded-2xl border border-white/5 shadow-orange-500/10 w-full aspect-video' : ''}
+                    `}>
+                        {/* Empty Default Class reset handled by conditional render below if needed, but styling is applied to container */}
+
+                        {videoSource === 'local' && videoLocal ? (
+                            // ✅ Local Video: Auto Auto aspect ratio with constraints
+                            <div className="w-full h-full flex justify-center bg-black items-center">
                                 <video
                                     src={videoLocal}
                                     controls
                                     autoPlay
-                                    className="w-full h-full object-cover"
+                                    className={`w-full h-full object-contain ${isPortraitEmbed ? 'scale-[1.01]' : 'max-h-[80vh]'}`}
                                 >
                                     Your browser does not support the video tag.
                                 </video>
-                            ) : isYouTube ? (
-                                <iframe
-                                    src={embedUrl}
-                                    title={title}
-                                    className="w-full h-full"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                />
-                            ) : (
-                                <video
-                                    src={videoUrl}
-                                    controls
-                                    className="w-full h-full object-cover"
-                                    poster=""
-                                >
-                                    Your browser does not support the video tag.
-                                </video>
-                            )}
-                        </div>
+                            </div>
+                        ) : (
+                            // ✅ Embeds (YouTube, TikTok, IG)
+                            <div className={`w-full h-full ${isPortraitEmbed ? 'bg-white' : ''}`}>
+                                {isEmbedSource ? (
+                                    <>
+                                        <iframe
+                                            src={embedUrl}
+                                            title={title}
+                                            className="w-full h-full"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            scrolling="no"
+                                            style={{ border: 'none' }}
+                                        />
+                                        {/* TikTok Inner Shadow only */}
+                                        {(isTikTok || isShorts) && <div className="absolute inset-0 pointer-events-none rounded-[2.2rem] ring-1 ring-black/10 inset-shadow"></div>}
+                                    </>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-white/30">
+                                        Invalid Video Source
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* CTA */}
